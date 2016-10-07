@@ -21,6 +21,7 @@ Check out code
 
 Create datacards
 
+    # https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideHiggsAnalysisCombinedLimit#How_to_prepare_the_datacard
     mkdir Datacards
     python python/createDatacards.py
 
@@ -30,7 +31,7 @@ Expected/observed limits (upper limit on the signal strength)
 
 Expected significance
 
-    combine -d Datacards/Datacard2.txt  -M ProfileLikelihood -v 1 --significance --expectSignal=1 -t -1 -m 125 -n Expected
+    combine -d Datacards/Datacard2.txt -M ProfileLikelihood -v 1 --significance --expectSignal=1 -t -1 -m 125 -n Expected
 
 Observed significance
 
@@ -38,5 +39,5 @@ Observed significance
 
 Best fit signal strength with uncertainty
 
-    combine -d Datacards/Datacard2.txt -M MaxLikelihoodFit
+    combine -d Datacards/Datacard2.txt -M MaxLikelihoodFit -m 125
 
