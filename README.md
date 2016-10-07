@@ -22,7 +22,7 @@ Check out code
 Create datacards
 
     mkdir Datacards
-    python createDatacards.py
+    python python/createDatacards.py
 
 Test
 
