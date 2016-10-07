@@ -24,7 +24,19 @@ Create datacards
     mkdir Datacards
     python python/createDatacards.py
 
-Test
+Expected/observed limits (upper limit on the signal strength)
 
-    combine -M Asymptotic Datacards/Datacard2.txt -H ProfileLikelihood --picky
+    combine -M Asymptotic Datacards/Datacard2.txt -m 125 -H ProfileLikelihood --picky
+
+Expected significance
+
+    combine -d Datacards/Datacard2.txt  -M ProfileLikelihood -v 1 --significance --expectSignal=1 -t -1 -m 125 -n Expected
+
+Observed significance
+
+    combine -d Datacards/Datacard2.txt -M ProfileLikelihood -v 1 --significance -m 125
+
+Best fit signal strength with uncertainty
+
+    combine -d Datacards/Datacard2.txt -M MaxLikelihoodFit
 
