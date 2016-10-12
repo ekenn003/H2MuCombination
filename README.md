@@ -22,7 +22,7 @@ Check out code
 Create datacards
 
     # https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideHiggsAnalysisCombinedLimit#How_to_prepare_the_datacard
-    mkdir Datacards
+    cd TemplateFit # (or ShapeFit)
     python python/createDatacards.py
 
 Expected/observed limits (upper limit on the signal strength)
