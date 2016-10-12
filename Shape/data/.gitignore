@@ -1,0 +1,15 @@
+__init__.*
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Compiled source #
+###################
+*.pyc
+*.o
+*.so
