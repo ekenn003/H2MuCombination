@@ -3,25 +3,20 @@
 import os, sys
 from ROOT import *
 
-datadir = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
+main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
+template_data_dir = '{0}/src/H2MuCombination/Template/data'.format(os.environ['CMSSW_BASE'])
 
-#################################################
-# shapes file (has to be in data directory
-#################################################
-shapefile = 'test.root'
+# shapes file (has to be in main data directory)
+shape_file = 'test.root'
 
-#################################################
 # output datacard name
-#################################################
 datacard = 'Datacards/DataCard_HToMuMu_2Mu_13TeV_2016Analysis.txt'
 
-#################################################
-# channels
-#################################################
-binname = 'mm'
+# processes
+bin_name = 'mm'
 
-sigProcesses = ['sigVBF', 'sigGGF']
-bkgProcesses = ['bkgTTJ', 'bkgDYJ']
+sig_processes = ['sigVBF', 'sigGGF']
+bkg_processes = ['bkgTTJ', 'bkgDYJ']
 
 # systematic = (name, shape, signal, background)
 # still working on how to do this for only a single channel
@@ -33,9 +28,9 @@ systematics += [('bkg_shapeUnc', 'lnN', '-',    '1.20')]
 
 
 
-# include data yield? (False for expected/blinded; if True, must have data_obs in shapefile)
-includeData = False
-#includeData = True
+# include data yield? (False for expected/blinded; if True, must have data_obs in shape_file)
+include_data = False
+#include_data = True
 
 
 
@@ -43,16 +38,16 @@ includeData = False
 
 #################################################
 #################################################
-f0 = TFile.Open('{0}/{1}'.format(datadir, shapefile))
+f0 = TFile.Open('{0}/{1}'.format(main_data_dir, shape_file))
 
-nSigs = len(sigProcesses)
-nBkgs = len(bkgProcesses)
-nNuis = len(systematics)
+n_sigs = len(sig_processes)
+n_bkgs = len(bkg_processes)
+n_nuis = len(systematics)
 
 
 # fill rates
 rates = []
-for p in sigProcesses+bkgProcesses:
+for p in sig_processes+bkg_processes:
     rate = TH1F(f0.Get(p)).Integral()
     rates.append(rate)
 
@@ -66,27 +61,27 @@ else:
 #################################################
 with open(datacard, 'w') as fout:
     fout.write('imax \t{1 \tnumber of channels (1 for now)\n')
-    fout.write('jmax \t{0} \tnumber of backgrounds \n'.format(nBkgs))
-    fout.write('kmax \t{0} \tnumber of nuisance parameters (sources of systematic uncertainties) \n'.format(nNuis))
+    fout.write('jmax \t{0} \tnumber of backgrounds \n'.format(n_bkgs))
+    fout.write('kmax \t{0} \tnumber of nuisance parameters (sources of systematic uncertainties) \n'.format(n_nuis))
     fout.write('--------------------------\n')
-    fout.write('bin \t{0} \n'.format(binname))
+    fout.write('bin \t{0} \n'.format(bin_name))
     fout.write('observation \t{0} \n'.format(data_yield))
     fout.write('--------------------------\n')
-    fout.write('shapes \t*  \t{0} \tdata/{1} \t$PROCESS\n'.format(binname, shapefile))
+    fout.write('shapes \t*  \t{0} \tdata/{1} \t$PROCESS\n'.format(bin_name, shape_file))
     fout.write('--------------------------\n')
 
     fout.write('bin\t')
-    for i in range(nSigs+nBkgs):
-        fout.write('\t\t{0}'.format(binname))
+    for i in range(n_sigs+n_bkgs):
+        fout.write('\t\t{0}'.format(bin_name))
     fout.write('\n')
 
     fout.write('process\t')
-    for p in sigProcesses+bkgProcesses:
+    for p in sig_processes+bkg_processes:
         fout.write('\t\t{0}'.format(p))
     fout.write('\n')
 
     fout.write('process\t')
-    for i in range(1-nSigs,nBkgs+1,1):
+    for i in range(1-n_sigs,n_bkgs+1,1):
         fout.write('\t\t{0}'.format(i))
     fout.write('\n')
 
@@ -98,9 +93,9 @@ with open(datacard, 'w') as fout:
 
     for s in systematics:
         fout.write(s[0]+'\t'+s[1])
-        for sp in sigProcesses:
+        for sp in sig_processes:
             fout.write('\t'+s[2]+'\t')
-        for bp in bkgProcesses:
+        for bp in bkg_processes:
             fout.write('\t'+s[3]+'\t')
         fout.write('\n')
 
