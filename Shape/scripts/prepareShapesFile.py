@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os, sys
-from time import sleep
 from ROOT import *
 
 main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
