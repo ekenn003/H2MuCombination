@@ -8,12 +8,12 @@ blind_low = 120.
 blind_high = 130.
 
 #cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
-#cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
-cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
+cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
+#cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
 
-expd = 6
+max_expd = 6
 
-rs = {'central':125, 'min':110, 'max':200, 'fitmin' : 115, 'fitmax' : 135}
+#rs = {'central':125, 'min':110, 'max':200, 'fitmin' : 115, 'fitmax' : 135}
 rb = {'central':130, 'min':110, 'max':200, 'fitmin' : 110, 'fitmax' : 200}
 
 colors = [
@@ -21,42 +21,6 @@ colors = [
     R.kOrange, R.kPink, R.kMagenta, R.kAzure, R.kCyan, R.kTeal,
     R.kSpring
 ]
-
-## ____________________________________________________________________________
-def get_mc_info(tfile):
-    try:
-        # get xsec and sumw/nevents
-        tsummary = tfile.Get('Summary')
-        tsummary.GetEntry(0)
-        xsec = tsummary.tCrossSec
-        sumw = 0.
-        nevt = 0
-        for entry in range(tsummary.GetEntries()):
-            tsummary.GetEntry(entry)
-            sumw += tsummary.tSumWts
-            nevt += tsummary.tNumEvts
-    except:
-        print 'Could not get summary info from {0}'.format(tfile)
-        xsec = -1.
-        sumw = -1.
-        nevt = -1
-    if nevt and not sumw: sumw = nevt
-
-    return xsec, sumw
-
-
-
-## ____________________________________________________________________________
-def get_weighted_hist(tfile, hname):
-    xsec, sumw = get_mc_info(tfile)
-    try:
-        h = tfile.Get(hname)
-    except:
-        print 'ERROR: could not get {0} from {1}.'.format(hname, tfile)
-        return False
-    h.Scale((lumi*xsec)/sumw)
-    return h
-
 
 
 ## ____________________________________________________________________________
@@ -78,80 +42,6 @@ def get_RooHist(ws, h, name=None, blind=False):
                 h.SetBinContent(ibin+1, 0)
     rh = R.RooDataHist(name, name, R.RooArgList(ws.set('obs')), h)
     return rh
-
-
-
-
-## ____________________________________________________________________________
-def build_tripleGaus(ws, th1):
-    print 'building Triple Gaussian model'
-
-    initial_values = {
-        'mean1' : th1.GetMean(), 'mean1min' : th1.GetMean() - 0.2*th1.GetRMS(),
-        'mean1max' : th1.GetMean() + 0.2*th1.GetRMS(),
-        'sigma1' : 0.6*th1.GetRMS(), 'sigma1min' : 0.2*th1.GetRMS(),
-        'sigma1max' : 1.2*th1.GetRMS(),
-        'mean2' : th1.GetMean(), 'mean2min' : th1.GetMean() - 0.4*th1.GetRMS(),
-        'mean2max' : th1.GetMean() + 0.4*th1.GetRMS(),
-        'sigma2' : 1.0*th1.GetRMS(), 'sigma2min' : 0.4*th1.GetRMS(),
-        'sigma2max' : 1.8*th1.GetRMS(),
-        'mean3' : th1.GetMean(), 'mean3min' : th1.GetMean() - 2.4*th1.GetRMS(),
-        'mean3max' : th1.GetMean() + 0.8*th1.GetRMS(),
-        'sigma3' : 2.4*th1.GetRMS(), 'sigma3min' : 1.2*th1.GetRMS(),
-        'sigma3max' : 4.8*th1.GetRMS(),
-        'coef1' : 0.7, 'coef1min' : 0.5, 'coef1max' : 1,
-        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1
-    }
-
-
-    ws.factory('mean1_tripleGaus[{mean1}, {mean1min}, {mean1max}]'.format(
-         **initial_values))
-    ws.factory('sigma1_tripleGaus[{sigma1}, {sigma1min}, {sigma1max}]'.format(
-         **initial_values))
-    ws.var('mean1_tripleGaus').setUnit('GeV')
-    ws.var('sigma1_tripleGaus').setUnit('GeV')
-    ws.factory('mean2_tripleGaus[{mean2}, {mean2min}, {mean2max}]'.format(
-         **initial_values))
-    ws.factory('sigma2_tripleGaus[{sigma2}, {sigma2min}, {sigma2max}]'.format(
-         **initial_values))
-    ws.var('mean2_tripleGaus').setUnit('GeV')
-    ws.var('sigma2_tripleGaus').setUnit('GeV')
-    ws.factory('mean3_tripleGaus[{mean3}, {mean3min}, {mean3max}]'.format(
-         **initial_values))
-    ws.factory('sigma3_tripleGaus[{sigma3}, {sigma3min}, {sigma3max}]'.format(
-         **initial_values))
-    ws.var('mean3_tripleGaus').setUnit('GeV')
-    ws.var('sigma3_tripleGaus').setUnit('GeV')
-
-    # beta
-    ws.factory('coef1_tripleGaus[{coef1}, {coef1min}, {coef1max}]'.format(
-         **initial_values
-    ))
-    ws.factory('coef2_tripleGaus[{coef2}, {coef2min}, {coef2max}]'.format(
-         **initial_values
-    ))
-
-
-
-
-    g1 = ws.factory('Gaussian::g1_tripleGaus(x, mean1_tripleGaus,'
-                    'sigma1_tripleGaus)')
-    g2 = ws.factory('Gaussian::g2_tripleGaus(x, mean2_tripleGaus,'
-                    'sigma2_tripleGaus)')
-    g3 = ws.factory('Gaussian::g3_tripleGaus(x, mean3_tripleGaus,'
-                    'sigma3_tripleGaus)')
-    gaussians = R.RooArgList(g1, g2, g3)
-    betas = R.RooArgList(ws.var('coef1_tripleGaus'),
-        ws.var('coef2_tripleGaus'))
-    print betas.getSize()
-    print gaussians.getSize()
-    tripleGaus = R.RooAddPdf('tripleGaus', 'tripleGaus',
-        gaussians, betas, R.kTRUE)
-    getattr(ws, 'import')(tripleGaus, R.RooFit.RecycleConflictNodes())
-
-    return ws.pdf('tripleGaus')
-
-
 
 
 ## ____________________________________________________________________________
@@ -203,12 +93,24 @@ def main():
                      'ana_2Mu_DYJetsToLL.root')
     h_name_base = 'categories/hDiMuInvMass_'
 
+    ftest_results = {}
+    bkg_models = []
+
+    for i in xrange(1,max_expd+1):
+        bkg_models[i-1] = build_sumExp(wspace, i)
 
 
     for cat in cats: 
-        wspace_fname = 'workspace_{0}_{1}.root'.format(cat, signal_model)
+        wspace_fname = 'workspace_{0}_{1}.root'.format(cat, 'ftest')
         wspace = R.RooWorkspace(wspace_name)
         build_mass_var(wspace)
+
+
+
+        ftest_results[cat] = {}
+
+
+
 
         # get data and turn it into a RooDataHist
         h_data = data_f.Get(h_name_base+cat)
@@ -224,15 +126,11 @@ def main():
         canv.cd()
         frame = wspace.var('x').frame()
 
-#        sigpdf = build_tripleGaus(wspace, h_vbf)
-#
-#        thissigfit = sigpdf.fitTo(rh_data, R.RooFit.Save(),
-#            R.RooFit.Range(rs['fitmin'], rs['fitmax']),
-#            R.RooFit.SumW2Error(R.kTRUE))
 
 
 
-        bkgpdf = build_sumExp(wspace, expd)
+
+        bkgpdf = build_sumExp(wspace, h_data, expd)
 
         wspace.var('x').setRange('blinded_low', rb['min'], blind_low)
         wspace.var('x').setRange('blinded_high', blind_high, rb['max'])
@@ -276,7 +174,7 @@ def main():
         frame.Draw()
         leg.Draw()
         R.gPad.Modified()
-        canv.Print('test_'+cat+'.png')
+        canv.Print('ftest_sumExp.png')
 
 
 
