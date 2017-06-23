@@ -22,14 +22,18 @@ colors = [
     R.kSpring
 ]
 
+#R.RooFit.RooMsgService.instance().setGlobalKillBelow(4)
+R.RooMsgService.instance().setGlobalKillBelow(5)
 
 ## ____________________________________________________________________________
 def build_mass_var(ws):
-    print 'x[{central}, {min}, {max}]'.format(**rs)
-    ws.factory('x[{central}, {min}, {max}]'.format(**rs))
+    print 'x[{central}, {min}, {max}]'.format(**rb)
+    ws.factory('x[{central}, {min}, {max}]'.format(**rb))
     ws.var('x').SetTitle('m_{#mu#mu}')
     ws.var('x').setUnit('GeV')
     ws.defineSet('obs', 'x')
+    ws.var('x').setRange('blinded_low', rb['min'], blind_low)
+    ws.var('x').setRange('blinded_high', blind_high, rb['max'])
 
 ## ____________________________________________________________________________
 def get_RooHist(ws, h, name=None, blind=False):
@@ -65,11 +69,12 @@ def build_sumExp(ws, degree):
         ws.factory('Exponential::exp{0}_sumExp(x, alpha{0}_sumExp)'.format(i))
         exps.add(ws.pdf('exp{0}_sumExp'.format(i)))
     
-    sumExp = R.RooAddPdf('sumExp', 'sumExp', exps, betas, R.kTRUE)
+    sumExp = R.RooAddPdf('sumExpOrd'+str(degree), 
+                         'sumExpOrd'+str(degree), exps, betas, R.kTRUE)
     getattr(ws, 'import')(sumExp, R.RooFit.RecycleConflictNodes())
 
 
-    return ws.pdf('sumExp')
+    return ws.pdf('sumExpOrd'+str(degree))
 
 
 
@@ -94,10 +99,6 @@ def main():
     h_name_base = 'categories/hDiMuInvMass_'
 
     ftest_results = {}
-    bkg_models = []
-
-    for i in xrange(1,max_expd+1):
-        bkg_models[i-1] = build_sumExp(wspace, i)
 
 
     for cat in cats: 
@@ -105,76 +106,70 @@ def main():
         wspace = R.RooWorkspace(wspace_name)
         build_mass_var(wspace)
 
+        bkg_models = []
+        for order in xrange(1,max_expd+1):
+            bkg_models.append(build_sumExp(wspace, order))
 
 
         ftest_results[cat] = {}
-
-
-
+        leg = R.TLegend(0.35, 0.6, 0.9, 0.9)
 
         # get data and turn it into a RooDataHist
         h_data = data_f.Get(h_name_base+cat)
         #h_vbf = get_weighted_hist(vbf_f, h_name_base+cat)
-
+    
         h_name = 'data_obs_' + cat
         rh_data = get_RooHist(wspace, h_data, name=h_name, blind=True)
-
+    
         norm = rh_data.sumEntries()
         print cat, 'norm =', norm
-
+    
         canv = R.TCanvas(cat, cat, 800, 600)
         canv.cd()
         frame = wspace.var('x').frame()
 
-
-
-
-
-        bkgpdf = build_sumExp(wspace, h_data, expd)
-
-        wspace.var('x').setRange('blinded_low', rb['min'], blind_low)
-        wspace.var('x').setRange('blinded_high', blind_high, rb['max'])
-
-        thisbkgfit = bkgpdf.fitTo(rh_data, R.RooFit.Save(),
-            R.RooFit.Range('blinded_low,blinded_high'),
-            R.RooFit.NormRange('blinded_low,blinded_high'),
-            R.RooFit.SumW2Error(R.kTRUE))
-
-
-
-
-
-
-
-
-
-
-
-
         rh_data.plotOn(frame, R.RooFit.DrawOption('P'))
 
-#        sigpdf.plotOn(frame, R.RooFit.LineColor(R.kBlue))
-        bkgpdf.plotOn(frame, R.RooFit.LineColor(R.kRed),
-                      R.RooFit.Name('sumExp'),
-                      R.RooFit.Range('FULL'),
-                      #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent))
-                      )
+        prevNLL = -1.
 
-        leg = R.TLegend(0.65, 0.6, 0.9, 0.9)
-        leg.AddEntry(frame.findObject('sumExp'), 'sumExp', 'l')
-        for i in xrange(1,expd+1):
-            bkgpdf.plotOn(frame, R.RooFit.LineColor(colors[i]),
-                R.RooFit.LineWidth(1),
-                R.RooFit.Components('exp{0}_sumExp'.format(i)),
-                R.RooFit.Name('exp{0}_sumExp'.format(i)))
-            leg.AddEntry(frame.findObject('exp{0}_sumExp'.format(i)), 'exp{0}_sumExp'.format(i), 'l')
+        for order in xrange(1,max_expd+1):
+            print 'trying to get exp order', order
+            thisbkgfit = bkg_models[order-1].fitTo(rh_data, R.RooFit.Save(),
+                R.RooFit.Range('blinded_low,blinded_high'),
+                R.RooFit.NormRange('blinded_low,blinded_high'),
+                R.RooFit.PrintLevel(-1),
+                R.RooFit.SumW2Error(R.kTRUE))
+
+            bkg_models[order-1].plotOn(frame, R.RooFit.LineColor(colors[order]),
+                R.RooFit.LineWidth(2),
+                R.RooFit.Name('sumExpOrd'+str(order)),
+                R.RooFit.Range('FULL'),
+                #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent))
+                )
+
+
+            thisndof = order*2-1
+
+            thischi2 = frame.chiSquare()
+            thispval = R.TMath.Prob(thischi2, thisndof)
+
+            print '\n'*10
+            print '*'*80
+            print '*'*80
+            print 'order {0} chi2 value = {1}, p = {2}'.format(order, thischi2, thispval)
+            print '*'*80
+            print '*'*80
+            print '\n'*10
+
+            leg.AddEntry(frame.findObject('sumExpOrd'+str(order)), 
+                'sumExpOrd{0}, #chi^2 ={1}, p={2}'.format(order, thischi2, thispval), 'l')
 
 
         frame.SetTitle('DiMuon Invariant Mass ({0})'.format(cat))
         frame.Draw()
         leg.Draw()
         R.gPad.Modified()
-        canv.Print('ftest_sumExp.png')
+        canv.Print('ftest_sumExp_{0}.png'.format(cat))
 
 
 
