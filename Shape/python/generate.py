@@ -11,7 +11,7 @@ blind_high = 130.
 #cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
 cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
 
-expd = 6
+expd = 5
 
 rs = {'central':125, 'min':110, 'max':200, 'fitmin' : 115, 'fitmax' : 135}
 rb = {'central':130, 'min':110, 'max':200, 'fitmin' : 110, 'fitmax' : 200}
@@ -212,7 +212,7 @@ def main():
 
         # get data and turn it into a RooDataHist
         h_data = data_f.Get(h_name_base+cat)
-        #h_vbf = get_weighted_hist(vbf_f, h_name_base+cat)
+        h_vbf = get_weighted_hist(vbf_f, h_name_base+cat)
 
         h_name = 'data_obs_' + cat
         rh_data = get_RooHist(wspace, h_data, name=h_name, blind=True)
@@ -220,63 +220,57 @@ def main():
         norm = rh_data.sumEntries()
         print cat, 'norm =', norm
 
-        canv = R.TCanvas(cat, cat, 800, 600)
+        canv = R.TCanvas(cat, cat, 1200, 900)
         canv.cd()
         frame = wspace.var('x').frame()
 
-#        sigpdf = build_tripleGaus(wspace, h_vbf)
-#
-#        thissigfit = sigpdf.fitTo(rh_data, R.RooFit.Save(),
-#            R.RooFit.Range(rs['fitmin'], rs['fitmax']),
-#            R.RooFit.SumW2Error(R.kTRUE))
+        sigpdf = build_tripleGaus(wspace, h_vbf)
+
+        thissigfit = sigpdf.fitTo(rh_data, R.RooFit.Save(),
+            R.RooFit.Range(rs['fitmin'], rs['fitmax']),
+            R.RooFit.Range(rs['fitmin'], rs['fitmax']),
+            R.RooFit.SumW2Error(R.kTRUE))
 
 
 
         bkgpdf = build_sumExp(wspace, expd)
-
         wspace.var('x').setRange('blinded_low', rb['min'], blind_low)
         wspace.var('x').setRange('blinded_high', blind_high, rb['max'])
-
         thisbkgfit = bkgpdf.fitTo(rh_data, R.RooFit.Save(),
             R.RooFit.Range('blinded_low,blinded_high'),
             R.RooFit.NormRange('blinded_low,blinded_high'),
             R.RooFit.SumW2Error(R.kTRUE))
 
 
-
-
-
-
-
-
-
-
-
-
         rh_data.plotOn(frame, R.RooFit.DrawOption('P'))
 
-#        sigpdf.plotOn(frame, R.RooFit.LineColor(R.kBlue))
+        sigpdf.plotOn(frame, R.RooFit.LineColor(R.kBlue),
+                      R.RooFit.Name('tripleGaus'),
+                      R.RooFit.Range('FULL'))
         bkgpdf.plotOn(frame, R.RooFit.LineColor(R.kRed),
                       R.RooFit.Name('sumExp'),
-                      R.RooFit.Range('FULL'),
-                      #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent))
-                      )
+                      R.RooFit.Range('FULL'))
+                      #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent)))
 
         leg = R.TLegend(0.65, 0.6, 0.9, 0.9)
+        leg.AddEntry(frame.findObject('tripleGaus'), 'tripleGaus', 'l')
         leg.AddEntry(frame.findObject('sumExp'), 'sumExp', 'l')
-        for i in xrange(1,expd+1):
-            bkgpdf.plotOn(frame, R.RooFit.LineColor(colors[i]),
-                R.RooFit.LineWidth(1),
-                R.RooFit.Components('exp{0}_sumExp'.format(i)),
-                R.RooFit.Name('exp{0}_sumExp'.format(i)))
-            leg.AddEntry(frame.findObject('exp{0}_sumExp'.format(i)), 'exp{0}_sumExp'.format(i), 'l')
+
+#        for i in xrange(1,expd+1):
+#            bkgpdf.plotOn(frame, R.RooFit.LineColor(colors[i]),
+#                R.RooFit.LineWidth(1),
+#                R.RooFit.Components('exp{0}_sumExp'.format(i)),
+#                R.RooFit.Name('exp{0}_sumExp'.format(i)))
+#            leg.AddEntry(frame.findObject('exp{0}_sumExp'.format(i)), 'exp{0}_sumExp'.format(i), 'l')
 
 
-        frame.SetTitle('DiMuon Invariant Mass ({0})'.format(cat))
+        frame.SetTitle('Bkg only + signal, M_{{#mu#mu}} ({0})'.format(cat))
         frame.Draw()
         leg.Draw()
         R.gPad.Modified()
         canv.Print('test_'+cat+'.png')
+        wspace.Print('v')
+        wspace.SaveAs(wspace_fname)
 
 
 
