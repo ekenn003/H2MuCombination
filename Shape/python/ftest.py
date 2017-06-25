@@ -7,22 +7,28 @@ lumi = 215. # pb
 blind_low = 120.
 blind_high = 130.
 
-#cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
-cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
+cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
+#cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
 #cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
 
 max_expd = 6
 
 #rs = {'central':125, 'min':110, 'max':200, 'fitmin' : 115, 'fitmax' : 135}
-rb = {'central':130, 'min':110, 'max':200, 'fitmin' : 110, 'fitmax' : 200}
+rb = {'central':130, 'min':105, 'max':200, 'fitmin' : 105, 'fitmax' : 200}
 
 colors = [
-    R.kGreen, R.kBlue, R.kYellow, R.kViolet,
-    R.kOrange, R.kPink, R.kMagenta, R.kAzure, R.kCyan, R.kTeal,
-    R.kSpring
+    R.kSpring,
+    R.kBlue,
+    R.kOrange,
+    R.kPink,
+    #R.kMagenta,
+    R.kCyan,
+    #R.kTeal,
+    R.kViolet,
+    R.kGreen, 
+    R.kYellow,
 ]
 
-#R.RooFit.RooMsgService.instance().setGlobalKillBelow(4)
 R.RooMsgService.instance().setGlobalKillBelow(5)
 
 ## ____________________________________________________________________________
@@ -34,6 +40,8 @@ def build_mass_var(ws):
     ws.defineSet('obs', 'x')
     ws.var('x').setRange('blinded_low', rb['min'], blind_low)
     ws.var('x').setRange('blinded_high', blind_high, rb['max'])
+    ws.var('x').setRange('signal_region', blind_low, blind_high)
+    ws.var('x').setRange('full_region', rb['min'], rb['max'])
 
 ## ____________________________________________________________________________
 def get_RooHist(ws, h, name=None, blind=False):
@@ -82,6 +90,16 @@ def build_sumExp(ws, degree):
 
 
 ## ____________________________________________________________________________
+def get_norm_integral(pdf, ws, fr):
+    rooarg = R.RooArgSet(ws.var('x'))
+    integral = pdf.createIntegral(rooarg, rooarg, 'signal_region')
+    norm_yield = integral.getVal()
+    yield_error = integral.getPropagatedError(fr)
+    return norm_yield, yield_error
+
+
+
+## ____________________________________________________________________________
 def main():
     for c in cats: print c
 
@@ -92,13 +110,14 @@ def main():
     f_base = ('')
     data_f = R.TFile(f_base+
                      #'tmpout_data.root')
-                     'ana_2Mu_DYJetsToLL.root')
+                     'ana_2Mu_SingleMuon_Run2016.root')
     vbf_f  = R.TFile(f_base+
                      #'tmpout_VBF_full.root')
                      'ana_2Mu_DYJetsToLL.root')
     h_name_base = 'categories/hDiMuInvMass_'
 
     ftest_results = {}
+    order_4_yields = []
 
 
     for cat in cats: 
@@ -119,18 +138,18 @@ def main():
         #h_vbf = get_weighted_hist(vbf_f, h_name_base+cat)
     
         h_name = 'data_obs_' + cat
+        rh_data_unblind = get_RooHist(wspace, h_data, name=h_name, blind=False)
         rh_data = get_RooHist(wspace, h_data, name=h_name, blind=True)
     
-        norm = rh_data.sumEntries()
-        print cat, 'norm =', norm
+        norm = rh_data_unblind.sumEntries()
+        norm_blind = rh_data.sumEntries()
+        print cat, 'norm =', norm, ', normblind =', norm_blind
     
-        canv = R.TCanvas(cat, cat, 800, 600)
+        canv = R.TCanvas(cat, cat, 1200, 900)
         canv.cd()
         frame = wspace.var('x').frame()
 
         rh_data.plotOn(frame, R.RooFit.DrawOption('P'))
-
-        prevNLL = -1.
 
         for order in xrange(1,max_expd+1):
             print 'trying to get exp order', order
@@ -140,6 +159,19 @@ def main():
                 R.RooFit.PrintLevel(-1),
                 R.RooFit.SumW2Error(R.kTRUE))
 
+            thisndof = order*2-1
+
+            thischi2 = frame.chiSquare()
+            thispval = 1. - R.TMath.Prob(thischi2, thisndof)
+
+            #print '\n'*10
+            #print '*'*80
+            #print '*'*80
+            #print 'order {0} chi2 value = {1}, p = {2}'.format(order, thischi2, thispval)
+            #print '*'*80
+            #print '*'*80
+            #print '\n'*10
+
             bkg_models[order-1].plotOn(frame, R.RooFit.LineColor(colors[order]),
                 R.RooFit.LineWidth(2),
                 R.RooFit.Name('sumExpOrd'+str(order)),
@@ -147,30 +179,27 @@ def main():
                 #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent))
                 )
 
+            b_integral = get_norm_integral(bkg_models[order-1], wspace, thisbkgfit)
+            byield = b_integral[0]*norm, b_integral[1]*norm
+            if order==4: order_4_yields.append(byield)
 
-            thisndof = order*2-1
-
-            thischi2 = frame.chiSquare()
-            thispval = R.TMath.Prob(thischi2, thisndof)
-
-            print '\n'*10
-            print '*'*80
-            print '*'*80
-            print 'order {0} chi2 value = {1}, p = {2}'.format(order, thischi2, thispval)
-            print '*'*80
-            print '*'*80
-            print '\n'*10
 
             leg.AddEntry(frame.findObject('sumExpOrd'+str(order)), 
-                'sumExpOrd{0}, #chi^2 ={1}, p={2}'.format(order, thischi2, thispval), 'l')
+                ('sumExpOrd{0}, p = {1:0.3f}, y = {2:0.0f} +/- {3:0.0f}').format(
+                    order, thispval, byield[0], byield[1]), 'l')
+
+        leg.AddEntry(rh_data, 'SingleMuon 2016', 'p')
 
 
-        frame.SetTitle('DiMuon Invariant Mass ({0})'.format(cat))
+        frame.SetTitle('F-test: M_{{#mu#mu}} sumExponentials ({0})'.format(cat))
         frame.Draw()
         leg.Draw()
         R.gPad.Modified()
-        canv.Print('ftest_sumExp_{0}.png'.format(cat))
+        canv.Print('ftest_sumExp_{0}_yields.png'.format(cat))
 
+
+    for i, cat in enumerate(cats):
+        print '{0}: {1:0.0f} \pm {2:0.0f}'.format(cat, order_4_yields[i][0], order_4_yields[i][1])
 
 
     data_f.Close()

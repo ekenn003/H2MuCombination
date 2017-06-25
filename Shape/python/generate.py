@@ -103,6 +103,11 @@ def build_tripleGaus(ws, th1):
         'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1
     }
 
+    print initial_values
+
+
+
+
 
     ws.factory('mean1_tripleGaus[{mean1}, {mean1min}, {mean1max}]'.format(
          **initial_values))
@@ -190,8 +195,8 @@ def build_sumExp(ws, degree):
 def main():
     for c in cats: print c
 
-    wspace_name = 'higgs'
-    signal_model = 'tripleGauss'
+    wspace_name = 'mumu'
+    signal_model = 'tripleGaus'
     #f_base = ('/afs/cern.ch/work/e/ekennedy/work/fsanalysis/ana76/'
     #          'root6/CMSSW_7_6_5/src/AnalysisToolLight/2Mu/')
     f_base = ('')
@@ -199,8 +204,8 @@ def main():
                      #'tmpout_data.root')
                      'ana_2Mu_DYJetsToLL.root')
     vbf_f  = R.TFile(f_base+
-                     #'tmpout_VBF_full.root')
-                     'ana_2Mu_DYJetsToLL.root')
+                     'tmpout_VBF_full.root')
+                     #'ana_2Mu_DYJetsToLL.root')
     h_name_base = 'categories/hDiMuInvMass_'
 
 
