@@ -11,6 +11,9 @@ blind_low, blind_high = 120., 130.
 range_low, range_high = 105., 200.
 sig_fit_low, sig_fit_high = 115., 135.
 
+signal_model = 'double'
+#signal_model = 'triple'
+
 lumi = 36460.
 
 cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
@@ -37,6 +40,34 @@ def build_mass_var(ws):
     ws.var('x').setUnit('GeV')
     # define the set obs=(x) and make it known to python
     ws.defineSet('obs', 'x')
+
+
+## ____________________________________________________________________________
+def build_double_gaus(ws, cat_, proc):
+    cat = cat_ + '_' + proc
+    # RooRealVars
+    ws.factory('mean1_sig_model_'+cat+'[125., 121., 129.]')
+    ws.factory('sigma1_sig_model_'+cat+'[2., 1., 20.]')
+    ws.var('mean1_sig_model_'+cat).setUnit('GeV')
+    ws.var('sigma1_sig_model_'+cat).setUnit('GeV')
+    ws.factory('mean2_sig_model_'+cat+'[125., 121., 129.]')
+    ws.factory('sigma2_sig_model_'+cat+'[2., 1., 20.]')
+    ws.var('mean2_sig_model_'+cat).setUnit('GeV')
+    ws.var('sigma2_sig_model_'+cat).setUnit('GeV')
+    ws.factory('coef1_sig_model_'+cat+'[0.25, 0., 1.]')
+    # RooAbsPdfs
+    g1 = ws.factory(('Gaussian::g1_sig_model_{cat}(x, mean1_sig_model_{cat},'
+                     'sigma1_sig_model_{cat})').format(cat=cat))
+    g2 = ws.factory(('Gaussian::g2_sig_model_{cat}(x, mean2_sig_model_{cat},'
+                     'sigma2_sig_model_{cat})').format(cat=cat))
+    gaussians = RooArgList(g1, g2)
+    betas = RooArgList(ws.var('coef1_sig_model_'+cat))
+
+    sig_model = RooAddPdf('sig_model_'+cat, 'sig_model_'+cat,
+        gaussians, betas, kTRUE)
+    getattr(ws, 'import')(sig_model, RooFit.RecycleConflictNodes())
+    return sig_model
+
 
 
 ## ____________________________________________________________________________
@@ -76,7 +107,7 @@ def build_triple_gaus(ws, cat_, proc):
     getattr(ws, 'import')(sig_model, RooFit.RecycleConflictNodes())
     return sig_model
 
-    
+
 ## ____________________________________________________________________________
 def build_sum_exp(ws, cat, order=4):
     # RooRealVars
@@ -173,20 +204,21 @@ def save_plot_of(ws, cat, proc, pdf, dist):
     thisframe = ws.var('x').frame()
     dist.plotOn(thisframe, RooFit.DrawOption('hist'))
     pdf.plotOn(thisframe, RooFit.LineColor(sig_color),
-        RooFit.Name('tripleGaus_'+cat+'_'+proc),
+        RooFit.Name(signal_model+'Gaus_'+cat+'_'+proc),
         RooFit.Range('signal_fit'))
     pdf.paramOn(thisframe, RooFit.Layout(0.55, 0.95, 0.74))
     thisframe.getAttText().SetTextSize(0.02)
     leg = TLegend(0.65, 0.75, 0.9, 0.9)
-    leg.AddEntry(thisframe.findObject('tripleGaus_'+cat+'_'+proc),
-        'tripleGaus_'+cat+'_'+proc, 'l')
+    leg.AddEntry(thisframe.findObject(signal_model+'Gaus_'+cat+'_'+proc),
+        signal_model+'Gaus_'+cat+'_'+proc, 'l')
     leg.AddEntry(thisframe.findObject('sig_hist_'+cat+'_'+proc),
         'sig_hist_'+cat+'_'+proc, 'P')
-    thisframe.SetTitle('{0} sig. only fit, M_{{#mu#mu}} ({1}, {2}/pb)'.format(proc, cat, lumi))
+    thisframe.SetTitle(('{0} sig. only fit, M_{{#mu#mu}} ({1}, '
+        '{2}/pb)').format(proc, cat, lumi))
     thisframe.Draw()
     leg.Draw()
     gPad.Modified()
-    canv.Print('sig_fit_'+cat+'_'+proc+'.png')
+    canv.Print('sig_'+signal_model+'_fit_'+cat+'_'+proc+'.png')
 
 
 
@@ -228,11 +260,18 @@ def main():
         # create background model
         bkg_model = build_sum_exp(w, cat)
         # create signal models
-        sig_model_vbf = build_triple_gaus(w, cat, 'VBF')
-        sig_model_ggf = build_triple_gaus(w, cat, 'GluGlu')
-        sig_model_wm  = build_triple_gaus(w, cat, 'WMinusH')
-        sig_model_wp  = build_triple_gaus(w, cat, 'WPlusH')
-        sig_model_zh  = build_triple_gaus(w, cat, 'ZH')
+        if signal_model=='triple':
+            sig_model_vbf = build_triple_gaus(w, cat, 'VBF')
+            sig_model_ggf = build_triple_gaus(w, cat, 'GluGlu')
+            sig_model_wm  = build_triple_gaus(w, cat, 'WMinusH')
+            sig_model_wp  = build_triple_gaus(w, cat, 'WPlusH')
+            sig_model_zh  = build_triple_gaus(w, cat, 'ZH')
+        elif signal_model=='double':
+            sig_model_vbf = build_double_gaus(w, cat, 'VBF')
+            sig_model_ggf = build_double_gaus(w, cat, 'GluGlu')
+            sig_model_wm  = build_double_gaus(w, cat, 'WMinusH')
+            sig_model_wp  = build_double_gaus(w, cat, 'WPlusH')
+            sig_model_zh  = build_double_gaus(w, cat, 'ZH')
         # get signal MC RooDataHists
         sig_dist_vbf = build_mc_dist(f1, w, cat, 'VBF')
         sig_dist_ggf = build_mc_dist(f2, w, cat, 'GluGlu')
@@ -270,7 +309,7 @@ def main():
 
 
     # create output file
-    output_file = 'workspace_allcats_tripleGaus.root'
+    output_file = 'workspace_allcats_{0}Gaus.root'.format(signal_model)
     f_out = TFile('{0}/{1}'.format(shape_data_dir, output_file), 'RECREATE')
     f_out.cd()
     # save workspace in output file
