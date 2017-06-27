@@ -22,7 +22,7 @@ u = get_systematics_map()
 
 cat = 'cat00' # this is aka the bin name
 # shapes file (has to be in main data directory)
-shape_file = 'workspace_{0}_tripleGaus.root'.format(cat)
+shape_file = 'workspace_allcats_tripleGaus.root'
 
 
 # output datacard name
@@ -47,11 +47,11 @@ with open(datacard, 'w') as fout:
     fout.write(('shapes data_obs * data/{0}'
         '\t{1}:data_obs_$CHANNEL\n').format(shape_file, wspace_name))
     fout.write(('shapes BKG      * data/{0}'
-        #'\t{1}:bkg_model_$CHANNEL\n').format(shape_file, wspace_name))
-        '\t{1}:bkg_model\n').format(shape_file, wspace_name))
+        '\t{1}:bkg_model_$CHANNEL\n').format(shape_file, wspace_name))
+        #'\t{1}:bkg_model\n').format(shape_file, wspace_name))
     fout.write(('shapes *        * data/{0}'
-        #'\t{1}:sig_model_$CHANNEL_$PROCESS\n').format(
-        '\t{1}:sig_model\n').format(
+        '\t{1}:sig_model_$CHANNEL_$PROCESS\n').format(
+        #'\t{1}:sig_model\n').format(
             shape_file, wspace_name))
     fout.write(delim)
     fout.write('bin\t{0}\n'.format(('\t\t'+cat)*6))
