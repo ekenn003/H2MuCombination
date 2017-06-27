@@ -1,0 +1,39 @@
+imax 	1 	number of channels (i.e. cats/bins) 
+jmax 	5 	number of processes minus one 
+kmax 	* 	number of nuisance parameters (sources of systematic uncertainties) 
+----------------------------------------------------------------------
+bin 		cat00 
+observation 	-1 
+----------------------------------------------------------------------
+shapes data_obs * data/workspace_cat00_tripleGaus.root	mumu:data_obs_$CHANNEL
+shapes BKG      * data/workspace_cat00_tripleGaus.root	mumu:bkg_model
+shapes *        * data/workspace_cat00_tripleGaus.root	mumu:sig_model
+----------------------------------------------------------------------
+bin			cat00		cat00		cat00		cat00		cat00		cat00
+process			BKG		VBF		GluGlu		WPlusH		WMinusH		ZH
+process			1		0		-1		-2		-3		-4
+rate			1		36460.		36460.		36460.		36460.		36460.
+----------------------------------------------------------------------
+hmm           rateParam * VBF     $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_br_yr4.root:br
+vbfH_13TeV    rateParam * VBF     $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_yr4_13TeV.root:xs_13TeV
+hmm           rateParam * GluGlu  $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_br_yr4.root:br
+ggH_13TeV     rateParam * GluGlu  $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_yr4_13TeV.root:xs_13TeV
+hmm           rateParam * WPlusH  $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_br_yr4.root:br
+WplusH_13TeV  rateParam * WPlusH  $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_yr4_13TeV.root:xs_13TeV
+hmm           rateParam * WMinusH $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_br_yr4.root:br
+WminusH_13TeV rateParam * WMinusH $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_yr4_13TeV.root:xs_13TeV
+hmm           rateParam * ZH      $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_br_yr4.root:br
+ZH_13TeV      rateParam * ZH      $CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/sm_yr4_13TeV.root:xs_13TeV
+----------------------------------------------------------------------
+cms_res_j	lnN	-		0.992/1.018	1.004/1.001	0.998/1.003	1.003/0.996	1.002/1.000
+xsec_WH		lnN	-		-		-		1.02		1.02		-	
+xsec_qqH	lnN	-		1.022		-		-		-		-	
+cms_scale_j	lnN	-		1.026/0.996	0.997/1.003	0.999/1.002	1.002/0.989	1.014/0.995
+cms_pu		lnN	-		0.996/1.004	0.998/0.999	1.010/0.991	1.005/0.997	1.014/0.994
+xsec_ggH	lnN	-		-		1.05		-		-		-	
+lumi_13TeV	lnN	-		1.027		1.027		1.027		1.027		1.027	
+cms_scale	lnN	-		0.987/0.995	1.005/1.031	0.966/1.031	0.967/1.012	0.994/1.013
+br_hmm		lnN	-		1.017		1.017		1.017		1.017		1.017	
+cms_pdf		lnN	-		0.966/1.001	0.988/1.035	0.987/1.033	0.977/1.018	0.981/1.020
+xsec_ZH		lnN	-		-		-		-		-		0.965/1.041
+
