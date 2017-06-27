@@ -542,16 +542,34 @@ def get_systematics_map():
         'xsec_ZH'  : '0.965/1.041',
     }
 
+    for key, val in xsec_unc.iteritems():
+        unc_map[key] = {}
+        unc_map[key]['BKG'] = {}
+        unc_map[key]['VBF'] = {}
+        unc_map[key]['GluGlu'] = {}
+        unc_map[key]['WPlusH'] = {}
+        unc_map[key]['WMinusH'] = {}
+        unc_map[key]['ZH'] = {}
+    for key, val in constant_sys.iteritems():
+        unc_map[key] = {}
+        unc_map[key]['BKG'] = {}
+        unc_map[key]['VBF'] = {}
+        unc_map[key]['GluGlu'] = {}
+        unc_map[key]['WPlusH'] = {}
+        unc_map[key]['WMinusH'] = {}
+        unc_map[key]['ZH'] = {}
     for cat in ['cat'+str(i).zfill(2) for i in xrange(16)]:
-
         # production xsec unc affects all cats per process
-        for key, val in constant_sys:
+        for key, val in xsec_unc.iteritems():
             unc_map[key]['BKG'][cat]     = '-\t'
             unc_map[key]['VBF'][cat]     = '-\t'
             unc_map[key]['GluGlu'][cat]  = '-\t'
             unc_map[key]['WPlusH'][cat]  = '-\t'
             unc_map[key]['WMinusH'][cat] = '-\t'
             unc_map[key]['ZH'][cat]      = '-\t'
+
+
+    for cat in ['cat'+str(i).zfill(2) for i in xrange(16)]:
         unc_map['xsec_qqH']['VBF'][cat]    = xsec_unc['xsec_qqH']
         unc_map['xsec_ggH']['GluGlu'][cat] = xsec_unc['xsec_ggH']
         unc_map['xsec_WH']['WPlusH'][cat]  = xsec_unc['xsec_WH']
@@ -559,7 +577,7 @@ def get_systematics_map():
         unc_map['xsec_ZH']['ZH'][cat]      = xsec_unc['xsec_ZH']
 
         # unc that is the same for every category and process
-        for key, val in constant_sys:
+        for key, val in constant_sys.iteritems():
             unc_map[key]['BKG'][cat] = '-\t'
             unc_map[key]['VBF'][cat]     = val
             unc_map[key]['GluGlu'][cat]  = val

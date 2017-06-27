@@ -2,7 +2,7 @@
 # this only works for a single bin right now
 import os, sys
 from ROOT import *
-from systematics import unc_map as u
+from systematics import get_systematics_map
 
 main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_BASE'])
@@ -11,16 +11,9 @@ lhc_hxswg_dir = '$CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/'
 
 wspace_name = 'mumu'
 
-# output datacard name
-datacard = 'Datacards/DataCard_HToMuMu_2Mu_13TeV_2016Analysis.txt'
-
-# processes
-
-sig_processes = ['VBF', 'GluGlu', 'WPlusH', 'WMinusH', 'ZH']
-
 lumi = '36460.'
 
-
+u = get_systematics_map()
 
 
 #################################################
@@ -32,9 +25,10 @@ cat = 'cat00' # this is aka the bin name
 shape_file = 'workspace_{0}_tripleGaus.root'.format(cat)
 
 
-#################################################
-#################################################
-#f0 = TFile.Open('{0}/{1}'.format(shape_data_dir, shape_file))
+# output datacard name
+#datacard = 'Datacards/DataCard_HToMuMu_2Mu_13TeV_2016Analysis.txt'
+datacard = 'Datacards/datacard_'+cat+'_tripleGaus.txt'
+
 
 
 #################################################
@@ -53,9 +47,11 @@ with open(datacard, 'w') as fout:
     fout.write(('shapes data_obs * data/{0}'
         '\t{1}:data_obs_$CHANNEL\n').format(shape_file, wspace_name))
     fout.write(('shapes BKG      * data/{0}'
-        '\t{1}:bkg_model_$CHANNEL\n').format(shape_file, wspace_name))
+        #'\t{1}:bkg_model_$CHANNEL\n').format(shape_file, wspace_name))
+        '\t{1}:bkg_model\n').format(shape_file, wspace_name))
     fout.write(('shapes *        * data/{0}'
-        '\t{1}:sig_model_$CHANNEL_$PROCESS\n').format(
+        #'\t{1}:sig_model_$CHANNEL_$PROCESS\n').format(
+        '\t{1}:sig_model\n').format(
             shape_file, wspace_name))
     fout.write(delim)
     fout.write('bin\t{0}\n'.format(('\t\t'+cat)*6))
@@ -87,33 +83,21 @@ with open(datacard, 'w') as fout:
     fout.write(delim)
 
 
-    # systemtics
+    # systematics
     for s in u:
-        fout.write(s+'\tlnN\t')
-        fout.write(u[s]['BKG']+'\t')
-        fout.write(u[s]['VBF']+'\t')
-        fout.write(u[s]['GluGlu']+'\t')
-        fout.write(u[s]['WPlusH']+'\t')
-        fout.write(u[s]['WMinusH']+'\t')
-        fout.write(u[s]['ZH'])
-
-
-
-
-
+        fout.write(s)
+        if len(s) < 8: fout.write('\t')
+        fout.write('\tlnN')
+        fout.write('\t'+u[s]['BKG'][cat])
+        fout.write('\t'+u[s]['VBF'][cat])
+        fout.write('\t'+u[s]['GluGlu'][cat])
+        fout.write('\t'+u[s]['WPlusH'][cat])
+        fout.write('\t'+u[s]['WMinusH'][cat])
+        fout.write('\t'+u[s]['ZH'][cat])
         fout.write('\n')
-
-
-
 
     fout.write('\n')
     print 'Created ' + datacard
-
-
-
-
-
-
 
 
 
