@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os, sys
 from ROOT import *
+#from initial_values import iv as initial_values
 
 ## ____________________________________________________________________________
 def build_mass_var(ws, r):
@@ -16,72 +17,66 @@ def build_mass_var(ws, r):
     # define the set obs=(x) and make it known to python
     ws.defineSet('obs', 'x')
 
+
 ## ____________________________________________________________________________
-def get_initial_vals_from_TH1(th1, signal_model):
+def get_initial_vals_from_TH1(th1):
     sigma_max = 10.
-    mean_min = 123.
-    mean_max = 127.
-    initial_values = {}
-    if signal_model=='single':
-        initial_values = {
-            'mean1' : th1.GetMean(),
-            'mean1min' : max(mean_min, th1.GetMean() - 2*th1.GetRMS()),
-            'mean1max' : min(mean_max, th1.GetMean() + 2*th1.GetRMS()),
-            'sigma1' : th1.GetRMS(),
-            'sigma1min' : 0,
-            'sigma1max' : min(sigma_max, 2*th1.GetRMS()),
-            'mean2' : th1.GetMean(),
-            'mean2min' : max(mean_min, th1.GetMean() - 2*th1.GetRMS()),
-            'mean2max' : min(mean_max, th1.GetMean() + 2*th1.GetRMS()),
-            'sigma2' : th1.GetRMS(),
-            'sigma2min' : 0,
-            'sigma2max' : min(sigma_max, 2*th1.GetRMS()),
-            'coef1' : 0.28, 'coef1min' : 0, 'coef1max' : 1
-        }
-    elif signal_model=='double':
-        initial_values = {
-            'mean1' : th1.GetMean(),
-            'mean1min' : max(mean_min, th1.GetMean() - 2*th1.GetRMS()),
-            'mean1max' : min(mean_max, th1.GetMean() + 2*th1.GetRMS()),
-            'sigma1' : th1.GetRMS(),
-            'sigma1min' : 0,
-            'sigma1max' : min(sigma_max, 2*th1.GetRMS()),
-            'mean2' : th1.GetMean(),
-            'mean2min' : max(mean_min, th1.GetMean() - 2*th1.GetRMS()),
-            'mean2max' : min(mean_max, th1.GetMean() + 2*th1.GetRMS()),
-            'sigma2' : th1.GetRMS(),
-            'sigma2min' : 0,
-            'sigma2max' : min(sigma_max, 2*th1.GetRMS()),
-            'coef1' : 0.28, 'coef1min' : 0, 'coef1max' : 1
-        }
-    #elif signal_model=='triple':
-    #    initial_values = {
-    #        'mean1' : th1.GetMean(),
-    #        'mean1min' : max(120., th1.GetMean() - 0.2*th1.GetRMS()),
-    #        'mean1max' : min(130., th1.GetMean() + 0.2*th1.GetRMS()),
-    #        'sigma1' : 0.6*th1.GetRMS(),
-    #        'sigma1min' : 0.2*th1.GetRMS(),
-    #        'sigma1max' : 1.2*th1.GetRMS(),
-    #        'mean2' : th1.GetMean(), 
-    #        'mean2min' : max(120., th1.GetMean() - 0.4*th1.GetRMS()),
-    #        'mean2max' : min(130., th1.GetMean() + 0.4*th1.GetRMS()),
-    #        'sigma2' : 1.0*th1.GetRMS(), 
-    #        'sigma2min' : 0.4*th1.GetRMS(),
-    #        'sigma2max' : 1.8*th1.GetRMS(),
-    #        'mean3' : th1.GetMean(),
-    #        'mean3min' : max(120., th1.GetMean() - 2.4*th1.GetRMS()),
-    #        'mean3max' : min(130., th1.GetMean() + 0.8*th1.GetRMS()),
-    #        'sigma3' : 2.4*th1.GetRMS(),
-    #        'sigma3min' : 1.2*th1.GetRMS(),
-    #        'sigma3max' : 4.8*th1.GetRMS(),
-    #        'coef1' : 0.7, 'coef1min' : 0.5, 'coef1max' : 1,
-    #        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1
-    #    }
+    mean_min = 121.
+    mean_max = 129.
+    initial_values = {
+        'mean1' : th1.GetMean(),
+        'mean1min' : max(120., th1.GetMean() - 0.2*th1.GetRMS()),
+        'mean1max' : min(130., th1.GetMean() + 0.2*th1.GetRMS()),
+        'sigma1' : 0.6*th1.GetRMS(),
+        'sigma1min' : 0.2*th1.GetRMS(),
+        'sigma1max' : 1.2*th1.GetRMS(),
+        'mean2' : th1.GetMean(), 
+        'mean2min' : max(120., th1.GetMean() - 0.4*th1.GetRMS()),
+        'mean2max' : min(130., th1.GetMean() + 0.4*th1.GetRMS()),
+        'sigma2' : 1.0*th1.GetRMS(), 
+        'sigma2min' : 0.4*th1.GetRMS(),
+        'sigma2max' : 1.8*th1.GetRMS(),
+        'mean3' : th1.GetMean(),
+        'mean3min' : max(120., th1.GetMean() - 2.4*th1.GetRMS()),
+        'mean3max' : min(130., th1.GetMean() + 0.8*th1.GetRMS()),
+        'sigma3' : 2.4*th1.GetRMS(),
+        'sigma3min' : 1.2*th1.GetRMS(),
+        'sigma3max' : 4.8*th1.GetRMS(),
+        'coef1' : 0.7, 'coef1min' : 0.5, 'coef1max' : 1,
+        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1
+    }
 
     for key, val in initial_values.iteritems():
         print key, ':', val
 
     return initial_values
+
+
+
+
+## ____________________________________________________________________________
+def build_single_gaus(ws, cat_, proc, iv):
+    cat = cat_ + '_' + proc
+    # RooRealVars
+    ws.factory(('mean1_sig_model_'+cat
+        +'[{mean1}, {mean1min}, {mean1max}]').format(**iv))
+    ws.factory(('sigma1_sig_model_'+cat
+        +'[{sigma1}, {sigma1min}, {sigma1max}]').format(**iv))
+
+    # RooAbsPdfs
+    g1 = ws.factory(('Gaussian::g1_sig_model_{cat}(x, mean1_sig_model_{cat},'
+                     'sigma1_sig_model_{cat})').format(cat=cat))
+    gaussians = RooArgList(g1)
+    betas = RooArgList()
+
+    ws.var('mean1_sig_model_'+cat).setUnit('GeV')
+    ws.var('sigma1_sig_model_'+cat).setUnit('GeV')
+
+    sig_model = RooAddPdf('sig_model_'+cat, 'sig_model_'+cat,
+        gaussians, betas, kTRUE)
+    getattr(ws, 'import')(sig_model, RooFit.RecycleConflictNodes())
+    return sig_model
+
 
 ## ____________________________________________________________________________
 def build_double_gaus(ws, cat_, proc, iv):

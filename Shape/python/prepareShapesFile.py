@@ -2,6 +2,7 @@
 import os, sys
 from ROOT import *
 from tools.tools import *
+from tools.initial_values import *
 
 main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_BASE'])
@@ -18,6 +19,7 @@ ranges = {
     'sig_fit_high' : 135.,
 }
 
+#signal_model = 'single'
 signal_model = 'double'
 #signal_model = 'triple'
 
@@ -60,6 +62,7 @@ def main():
         print 'Error opening input files'
         return
     for cat in cats:
+        #if cat != 'cat00': continue
         # get data RooDataHist
         data_obs = build_data_dist(w, cat, f0)
         # create background model
@@ -71,11 +74,11 @@ def main():
         sig_h_wp  = get_mc_hist(f4, cat, lumi, 'WPlusH')
         sig_h_zh  = get_mc_hist(f5, cat, lumi, 'ZH')
 
-        iv_vbf = get_initial_vals_from_TH1(sig_h_vbf, signal_model)
-        iv_ggf = get_initial_vals_from_TH1(sig_h_ggf, signal_model)
-        iv_wm  = get_initial_vals_from_TH1(sig_h_wm, signal_model)
-        iv_wp  = get_initial_vals_from_TH1(sig_h_wp, signal_model)
-        iv_zh  = get_initial_vals_from_TH1(sig_h_zh, signal_model)
+        iv_vbf = get_initial_vals_from_TH1(sig_h_vbf)
+        iv_ggf = get_initial_vals_from_TH1(sig_h_ggf)
+        iv_wm  = get_initial_vals_from_TH1(sig_h_wm)
+        iv_wp  = get_initial_vals_from_TH1(sig_h_wp)
+        iv_zh  = get_initial_vals_from_TH1(sig_h_zh)
 
         # create signal models
         if signal_model=='triple':
@@ -90,6 +93,12 @@ def main():
             sig_model_wm  = build_double_gaus(w, cat, 'WMinusH', iv_wm)
             sig_model_wp  = build_double_gaus(w, cat, 'WPlusH', iv_wp)
             sig_model_zh  = build_double_gaus(w, cat, 'ZH', iv_zh)
+        elif signal_model=='single':
+            sig_model_vbf = build_single_gaus(w, cat, 'VBF', iv_vbf)
+            sig_model_ggf = build_single_gaus(w, cat, 'GluGlu', iv_ggf)
+            sig_model_wm  = build_single_gaus(w, cat, 'WMinusH', iv_wm)
+            sig_model_wp  = build_single_gaus(w, cat, 'WPlusH', iv_wp)
+            sig_model_zh  = build_single_gaus(w, cat, 'ZH', iv_zh)
 
         # get signal MC RooDataHists
         sig_dist_vbf = build_mc_dist(sig_h_vbf, w)
