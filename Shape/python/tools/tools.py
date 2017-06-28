@@ -19,31 +19,43 @@ def build_mass_var(ws, r):
 
 
 ## ____________________________________________________________________________
-def get_initial_vals_from_TH1(th1):
+def get_initial_vals_from_TH1(th1, cat, proc):
     sigma_max = 10.
     mean_min = 121.
     mean_max = 129.
+    f1, f2, c1 = 1., 1., 1.
+
+    if cat=='cat15' and proc=='WMinusH':
+        f1 *= 1.1
+        
+    if cat=='cat14' and proc=='VBF':
+        f2 *= 1.1
+        c1 *= 1.1
+
     initial_values = {
+        # single Gaus
         'mean1' : th1.GetMean(),
-        'mean1min' : max(120., th1.GetMean() - 0.2*th1.GetRMS()),
-        'mean1max' : min(130., th1.GetMean() + 0.2*th1.GetRMS()),
-        'sigma1' : 0.6*th1.GetRMS(),
-        'sigma1min' : 0.2*th1.GetRMS(),
-        'sigma1max' : 1.2*th1.GetRMS(),
+        'mean1min' : max(mean_min, th1.GetMean() - 0.2*th1.GetRMS()),
+        'mean1max' : min(mean_max, th1.GetMean() + 0.2*th1.GetRMS()),
+        'sigma1' : f1*0.45*th1.GetRMS(),
+        'sigma1min' : f1*0.2*th1.GetRMS(),
+        'sigma1max' : f1*1.2*th1.GetRMS(),
+        # double Gaus
         'mean2' : th1.GetMean(), 
-        'mean2min' : max(120., th1.GetMean() - 0.4*th1.GetRMS()),
-        'mean2max' : min(130., th1.GetMean() + 0.4*th1.GetRMS()),
-        'sigma2' : 1.0*th1.GetRMS(), 
-        'sigma2min' : 0.4*th1.GetRMS(),
-        'sigma2max' : 1.8*th1.GetRMS(),
+        'mean2min' : max(mean_min, th1.GetMean() - 0.4*th1.GetRMS()),
+        'mean2max' : min(mean_max, th1.GetMean() + 0.4*th1.GetRMS()),
+        'sigma2' : f2*0.6*th1.GetRMS(), 
+        'sigma2min' : f1*0.7*th1.GetRMS(),
+        'sigma2max' : f2*1.2*th1.GetRMS(),
+        'coef1' : c1*0.45, 'coef1min' : 0.00, 'coef1max' : .9,
+        # triple Gaus
         'mean3' : th1.GetMean(),
-        'mean3min' : max(120., th1.GetMean() - 2.4*th1.GetRMS()),
-        'mean3max' : min(130., th1.GetMean() + 0.8*th1.GetRMS()),
+        'mean3min' : max(mean_min, th1.GetMean() - 2.4*th1.GetRMS()),
+        'mean3max' : min(mean_max, th1.GetMean() + 0.8*th1.GetRMS()),
         'sigma3' : 2.4*th1.GetRMS(),
         'sigma3min' : 1.2*th1.GetRMS(),
         'sigma3max' : 4.8*th1.GetRMS(),
-        'coef1' : 0.7, 'coef1min' : 0.5, 'coef1max' : 1,
-        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1
+        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1,
     }
 
     for key, val in initial_values.iteritems():
