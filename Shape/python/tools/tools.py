@@ -32,6 +32,8 @@ def get_initial_vals_from_TH1(th1, cat, proc):
         f2 *= 1.1
         c1 *= 1.1
 
+    # these values work for double gaus
+    # DUPLICATE BEFORE DOING TRIPLE
     initial_values = {
         # single Gaus
         'mean1' : th1.GetMean(),
@@ -58,8 +60,8 @@ def get_initial_vals_from_TH1(th1, cat, proc):
         'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1,
     }
 
-    for key, val in initial_values.iteritems():
-        print key, ':', val
+    #for key, val in initial_values.iteritems():
+    #    print key, ':', val
 
     return initial_values
 
@@ -218,6 +220,7 @@ def get_mc_info(tfile):
     if nevt and not sumw: sumw = nevt
     return xsec, sumw
 
+
 ## ____________________________________________________________________________
 def get_mc_hist(tfile, cat, lumi, proc):
     hname = 'categories/hDiMuInvMass_'+cat
@@ -227,7 +230,7 @@ def get_mc_hist(tfile, cat, lumi, proc):
     except:
         print 'ERROR: could not get {0} from {1}.'.format(hname, tfile)
         return False
-    h.Scale((lumi*xsec)/sumw)
+ #   h.Scale((lumi*xsec)/sumw)
     h.SetName('sig_hist_'+cat+'_'+proc)
     return h
 

@@ -69,6 +69,11 @@ def main():
         data_obs = build_data_dist(w, cat, f0)
         # create background model
         bkg_model = build_sum_exp(w, cat)
+        # create bkg norm
+        data_sume = data_obs.sumEntries()
+        bkg_model_norm = RooRealVar('bkg_model_'+cat+'_norm',
+            'bkg_model_'+cat+'_norm', data_sume/2., data_sume*2., 'Events')
+        getattr(w, 'import')(bkg_model_norm, RooFit.RecycleConflictNodes())
         # get signal histograms
         sig_h_vbf = get_mc_hist(f1, cat, lumi, 'VBF')
         sig_h_ggf = get_mc_hist(f2, cat, lumi, 'GluGlu')
