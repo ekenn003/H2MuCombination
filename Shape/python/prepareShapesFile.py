@@ -19,6 +19,8 @@ ranges = {
     'sig_fit_high' : 135.,
 }
 
+sp = ['VBF', 'GluGlu', 'WMinusH', 'WPlusH', 'ZH']
+
 #signal_model = 'single'
 signal_model = 'double'
 #signal_model = 'triple'
@@ -74,11 +76,11 @@ def main():
         sig_h_wp  = get_mc_hist(f4, cat, lumi, 'WPlusH')
         sig_h_zh  = get_mc_hist(f5, cat, lumi, 'ZH')
 
-        iv_vbf = get_initial_vals_from_TH1(sig_h_vbf)
-        iv_ggf = get_initial_vals_from_TH1(sig_h_ggf)
-        iv_wm  = get_initial_vals_from_TH1(sig_h_wm)
-        iv_wp  = get_initial_vals_from_TH1(sig_h_wp)
-        iv_zh  = get_initial_vals_from_TH1(sig_h_zh)
+        iv_vbf = get_initial_vals_from_TH1(sig_h_vbf, cat, 'VBF')
+        iv_ggf = get_initial_vals_from_TH1(sig_h_ggf, cat, 'GluGlu')
+        iv_wm  = get_initial_vals_from_TH1(sig_h_wm, cat, 'WMinusH')
+        iv_wp  = get_initial_vals_from_TH1(sig_h_wp, cat, 'WPlusH')
+        iv_zh  = get_initial_vals_from_TH1(sig_h_zh, cat, 'ZH')
 
         # create signal models
         if signal_model=='triple':
@@ -130,8 +132,11 @@ def main():
             RooFit.NormRange('signal_fit'),
             RooFit.SumW2Error(kTRUE))
         # fix parameters of signal fits
-
-
+        sig_model_vbf.getParameters(RooArgSet(w.var('x'))).setAttribAll('Constant', kTRUE)
+        sig_model_ggf.getParameters(RooArgSet(w.var('x'))).setAttribAll('Constant', kTRUE)
+        sig_model_wm.getParameters(RooArgSet(w.var('x'))).setAttribAll('Constant', kTRUE)
+        sig_model_wp.getParameters(RooArgSet(w.var('x'))).setAttribAll('Constant', kTRUE)
+        sig_model_zh.getParameters(RooArgSet(w.var('x'))).setAttribAll('Constant', kTRUE)
 
 
         # plot and print results for later viewing pleasure
@@ -148,7 +153,7 @@ def main():
     f_out = TFile('{0}/{1}'.format(shape_data_dir, output_file), 'RECREATE')
     f_out.cd()
     # save workspace in output file
-#    w.Print('v')
+    w.Print('v')
     w.Write()
     f_out.Write()
     f_out.Close()
@@ -160,6 +165,7 @@ def main():
     f3.Close()
     f4.Close()
     f5.Close()
+
 
 
 # __________________________________________________________

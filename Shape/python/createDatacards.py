@@ -3,6 +3,7 @@
 import os, sys
 from ROOT import *
 from systematics import get_systematics_map
+from acceptances import get_signal_rate_map
 
 main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_BASE'])
@@ -11,8 +12,13 @@ lhc_hxswg_dir = '$CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/'
 
 wspace_name = 'mumu'
 
+signal_model = 'double'
+
 lumi = '36460.'
 
+
+
+r = get_signal_rate_map(float(lumi))
 u = get_systematics_map()
 
 
@@ -21,14 +27,13 @@ u = get_systematics_map()
 #################################################
 
 cat = 'cat00' # this is aka the bin name
-# shapes file (has to be in main data directory)
-shape_file = 'workspace_allcats_tripleGaus.root'
+# input shapes file (has to be in main data directory)
+shape_file = 'workspace_allcats_'+signal_model+'Gaus.root'
 
 
 # output datacard name
 #datacard = 'Datacards/DataCard_HToMuMu_2Mu_13TeV_2016Analysis.txt'
-datacard = 'Datacards/datacard_'+cat+'_tripleGaus.txt'
-
+datacard = 'Datacards/datacard_'+cat+'_'+signal_model+'Gaus.txt'
 
 
 #################################################
@@ -57,30 +62,37 @@ with open(datacard, 'w') as fout:
     fout.write('bin\t{0}\n'.format(('\t\t'+cat)*6))
     fout.write('process\t\t\tBKG\t\tVBF\t\tGluGlu\t\tWPlusH\t\tWMinusH\t\tZH\n')
     fout.write('process\t\t\t1\t\t0\t\t-1\t\t-2\t\t-3\t\t-4\n')
-    fout.write('rate\t\t\t1{0}\n'.format(('\t\t'+lumi)*5))
+    #fout.write('rate\t\t\t1{0}\n'.format(('\t\t'+lumi)*5))
+    fout.write('rate\t\t\t1\t')
+    fout.write('\t'+str(r['VBF'][cat]))
+    fout.write('\t'+str(r['GluGlu'][cat]))
+    fout.write('\t'+str(r['WMinusH'][cat]))
+    fout.write('\t'+str(r['WPlusH'][cat]))
+    fout.write('\t'+str(r['ZH'][cat]))
+    fout.write('\n')
     fout.write(delim)
-    #
-    fout.write(('hmm           rateParam * VBF     '+lhc_hxswg_dir
-                +'sm_br_yr4.root:br\n'))
-    fout.write(('vbfH_13TeV    rateParam * VBF     '+lhc_hxswg_dir
-                +'sm_yr4_13TeV.root:xs_13TeV\n'))
-    fout.write(('hmm           rateParam * GluGlu  '+lhc_hxswg_dir
-                +'sm_br_yr4.root:br\n'))
-    fout.write(('ggH_13TeV     rateParam * GluGlu  '+lhc_hxswg_dir
-                +'sm_yr4_13TeV.root:xs_13TeV\n'))
-    fout.write(('hmm           rateParam * WPlusH  '+lhc_hxswg_dir
-                +'sm_br_yr4.root:br\n'))
-    fout.write(('WplusH_13TeV  rateParam * WPlusH  '+lhc_hxswg_dir
-                +'sm_yr4_13TeV.root:xs_13TeV\n'))
-    fout.write(('hmm           rateParam * WMinusH '+lhc_hxswg_dir
-                +'sm_br_yr4.root:br\n'))
-    fout.write(('WminusH_13TeV rateParam * WMinusH '+lhc_hxswg_dir
-                +'sm_yr4_13TeV.root:xs_13TeV\n'))
-    fout.write(('hmm           rateParam * ZH      '+lhc_hxswg_dir
-                +'sm_br_yr4.root:br\n'))
-    fout.write(('ZH_13TeV      rateParam * ZH      '+lhc_hxswg_dir
-                +'sm_yr4_13TeV.root:xs_13TeV\n'))
-    fout.write(delim)
+    # these are only for spline
+    #fout.write(('hmm           rateParam * VBF     '+lhc_hxswg_dir
+    #            +'sm_br_yr4.root:br\n'))
+    #fout.write(('vbfH_13TeV    rateParam * VBF     '+lhc_hxswg_dir
+    #            +'sm_yr4_13TeV.root:xs_13TeV\n'))
+    #fout.write(('hmm           rateParam * GluGlu  '+lhc_hxswg_dir
+    #            +'sm_br_yr4.root:br\n'))
+    #fout.write(('ggH_13TeV     rateParam * GluGlu  '+lhc_hxswg_dir
+    #            +'sm_yr4_13TeV.root:xs_13TeV\n'))
+    #fout.write(('hmm           rateParam * WPlusH  '+lhc_hxswg_dir
+    #            +'sm_br_yr4.root:br\n'))
+    #fout.write(('WplusH_13TeV  rateParam * WPlusH  '+lhc_hxswg_dir
+    #            +'sm_yr4_13TeV.root:xs_13TeV\n'))
+    #fout.write(('hmm           rateParam * WMinusH '+lhc_hxswg_dir
+    #            +'sm_br_yr4.root:br\n'))
+    #fout.write(('WminusH_13TeV rateParam * WMinusH '+lhc_hxswg_dir
+    #            +'sm_yr4_13TeV.root:xs_13TeV\n'))
+    #fout.write(('hmm           rateParam * ZH      '+lhc_hxswg_dir
+    #            +'sm_br_yr4.root:br\n'))
+    #fout.write(('ZH_13TeV      rateParam * ZH      '+lhc_hxswg_dir
+    #            +'sm_yr4_13TeV.root:xs_13TeV\n'))
+    #fout.write(delim)
 
 
     # systematics
