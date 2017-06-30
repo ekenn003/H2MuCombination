@@ -194,7 +194,8 @@ def build_data_dist(ws, cat, tfile):
         print 'Error getting '+hname
         return
     # create binned dataset from histograms and add to workspace
-    dataset = RooDataHist('data_obs_'+cat, 'data_obs_'+cat, RooArgList(ws.var('x')), h)
+    dataset = RooDataHist('data_obs_'+cat, 'data_obs_'+cat,
+        RooArgList(ws.var('x')), h)
     # how to use the import method in PyROOT
     getattr(ws,'import')(dataset, RooCmdArg(), RooFit.RecycleConflictNodes())
     return dataset
@@ -226,7 +227,7 @@ def get_mc_hist(tfile, cat, lumi, proc):
     hname = 'categories/hDiMuInvMass_'+cat
     xsec, sumw = get_mc_info(tfile)
     try:
-        h = tfile.Get(hname)
+        h = TH1F(tfile.Get(hname))
     except:
         print 'ERROR: could not get {0} from {1}.'.format(hname, tfile)
         return False
