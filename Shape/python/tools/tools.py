@@ -25,6 +25,16 @@ def get_initial_vals_from_TH1(th1, cat, proc):
     mean_max = 129.
     f1, f2, c1 = 1., 1., 1.
 
+    if (cat in ['cat00', 'cat04', 'cat05', 'cat06', 
+        'cat07', 'cat10', 'cat11', 'cat15']
+        and proc in ['WMinusH', 'WPlusH']):
+        f1 -= 0.4
+        f2 -= 0.4
+    if (cat in ['cat13', 'cat14', 'cat15']
+        and proc in ['WPlusH']):
+        f1 -= 0.2
+        f2 -= 0.2
+        
     if cat=='cat15' and proc=='WMinusH':
         f1 *= 1.1
         
@@ -166,11 +176,11 @@ def build_sum_exp(ws, cat, order=4):
     lambdas = RooArgList()
     betas   = RooArgList()
     for i in xrange(1, order+1):
-        ws.factory('alpha{0}_bkg_model_{cat}[{1}, -1., 0.]'.format(
-            i, max(-1., -0.04*(i+1)), cat=cat))
+        ws.factory('alpha{0}_bkg_model_{cat}[{1}, -1.1, 0.]'.format(
+            i, max(-.9, -0.04*(i+1)), cat=cat))
         if i < order:
-            ws.factory('beta{0}_bkg_model_{cat}[{1}, 0.0001, .9999]'.format(
-                i, 0.9-float(i-1)*1./order, cat=cat))
+            ws.factory('beta{0}_bkg_model_{cat}[{1}, 0., 1.1]'.format(
+                i, 0.95-float((i-1)/(i+1)), cat=cat))
             betas.add(ws.var('beta{0}_bkg_model_{cat}'.format(i, cat=cat)))
     # RooAbsPdfs
     for i in xrange(1, order+1):
@@ -253,7 +263,7 @@ def save_plot_of(ws, cat, lumi, signal_model, proc, pdf, dist):
     elif proc=='GluGlu': sig_color = kBlue
     elif proc=='WMinusH': sig_color = kRed
     elif proc=='WPlusH': sig_color = kViolet
-    elif proc=='ZH': sig_color = kMagenta
+    elif proc=='ZH': sig_color = kOrange+7
     canv = TCanvas(cat, cat, 1200, 900)
     canv.cd()
     thisframe = ws.var('x').frame()
@@ -268,11 +278,10 @@ def save_plot_of(ws, cat, lumi, signal_model, proc, pdf, dist):
         signal_model+'Gaus_'+cat+'_'+proc, 'l')
     leg.AddEntry(thisframe.findObject('sig_hist_'+cat+'_'+proc),
         'sig_hist_'+cat+'_'+proc, 'P')
-    thisframe.SetTitle(('{0} sig. only fit, M_{{#mu#mu}} ({1}, '
-        '{2}/pb)').format(proc, cat, lumi))
+    thisframe.SetTitle('{0} sig. only fit, M_{{#mu#mu}} ({1})'.format(proc, cat))
     thisframe.Draw()
     leg.Draw()
     gPad.Modified()
-    canv.Print('sig_'+signal_model+'_fit_'+cat+'_'+proc+'.png')
+    canv.Print('myplots/sig_'+signal_model+'_fit_'+cat+'_'+proc+'.png')
 
 

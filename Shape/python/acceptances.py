@@ -58,10 +58,10 @@ def get_signal_rate_map(lumi):
             num = h.Integral()
             den = nsw[p]
             acc[p][cat] = num/den
-            print
-            print p, cat, 'acceptance =', acc[p][cat]
             rates[p][cat] = (num/den) * lumi * (xsc[p])
-            print p, cat, 'rate       =', rates[p][cat]
+            #print
+            #print p, cat, 'acceptance =', acc[p][cat]
+            #print p, cat, 'rate       =', rates[p][cat]
   
     return rates
 
