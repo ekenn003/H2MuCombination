@@ -9,7 +9,7 @@ shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_B
 input_file_head = 'ana_2Mu_'
 input_file_tail = '.root'
 
-degree = 4
+degree = 2
 
 ranges = {
     'blind_low'  : 120.,
@@ -33,6 +33,7 @@ cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
 gROOT.SetBatch(kTRUE)
 RooMsgService.instance().setGlobalKillBelow(5)
 
+sig_integrals = {}
 
 ## ____________________________________________________________________________
 def main():
@@ -41,6 +42,7 @@ def main():
     w = RooWorkspace('mumu')
     build_mass_var(w, ranges)
     obs = w.set('obs')
+    rooarg = RooArgSet(w.var('x'))
     # map of filenames
     fnames = {
         'data' : '{0}/{1}{2}{3}'.format(main_data_dir,
@@ -69,7 +71,7 @@ def main():
         # get data RooDataHist
         data_obs = build_data_dist(w, cat, tf['data'])
         # create background model
-        bkg_model = build_sum_exp(w, cat)
+        bkg_model = build_sum_exp(w, cat, degree)
         # create bkg norm
         data_sume = data_obs.sumEntries()
         bkg_model_norm = RooRealVar('bkg_model_'+cat+'_norm',
@@ -103,7 +105,7 @@ def main():
             s_fits[p] = s_models[p].fitTo(s_dists[p],
                 RooFit.Save(), RooFit.Range('signal_fit'),
                 RooFit.NormRange('signal_fit'),
-                RooFit.PrintLevel(-1),
+                #RooFit.PrintLevel(-1),
                 RooFit.SumW2Error(kTRUE))
 
 
@@ -113,6 +115,11 @@ def main():
             # fix parameters of signal fits
             s_models[p].getParameters(RooArgSet(w.var('x'))
                 ).setAttribAll('Constant', kTRUE)
+
+            # save integral just in case
+            #thisint = s_models[p].createIntegral(rooarg,rooarg,'full_range')
+            thisint = s_models[p].createIntegral(rooarg,rooarg,'signal_fit')
+            sig_integrals[cat] = thisint.getVal()
 
 
     # create output file
@@ -125,6 +132,9 @@ def main():
     f_out.Write()
     f_out.Close()
     print 'Created ' + '{0}/{1}'.format(shape_data_dir, output_file)
+
+    #for key, val in sig_integrals.iteritems():
+    #    print key, val
 
     # close inputs
     for p, f in tf.iteritems():

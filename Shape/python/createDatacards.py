@@ -17,7 +17,8 @@ signal_model = 'double'
 
 lumi = '36460.'
 
-
+#include_sys = True
+include_sys = False
 
 r = get_signal_rate_map(float(lumi))
 u = get_systematics_map()
@@ -80,19 +81,20 @@ for cat in cats:
         fout.write(delim)
     
         # systematics
-        for s in u:
-            fout.write(s)
-            if len(s) < 8: fout.write('\t')
-            fout.write('\tlnN')
-            fout.write('\t'+u[s]['BKG'][cat])
-            fout.write('\t'+u[s]['VBF'][cat])
-            fout.write('\t'+u[s]['GluGlu'][cat])
-            fout.write('\t'+u[s]['WPlusH'][cat])
-            fout.write('\t'+u[s]['WMinusH'][cat])
-            fout.write('\t'+u[s]['ZH'][cat])
-            fout.write('\n')
+        if include_sys:
+            for s in u:
+                fout.write(s)
+                if len(s) < 8: fout.write('\t')
+                fout.write('\tlnN')
+                fout.write('\t'+u[s]['BKG'][cat])
+                fout.write('\t'+u[s]['VBF'][cat])
+                fout.write('\t'+u[s]['GluGlu'][cat])
+                fout.write('\t'+u[s]['WPlusH'][cat])
+                fout.write('\t'+u[s]['WMinusH'][cat])
+                fout.write('\t'+u[s]['ZH'][cat])
+                fout.write('\n')
     
-        fout.write('\n')
+            fout.write('\n')
         print 'Created', datacard
 
 # combine them

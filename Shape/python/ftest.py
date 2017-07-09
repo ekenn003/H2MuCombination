@@ -11,7 +11,7 @@ cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
 #cats = ['cat'+str(i).zfill(2) for i in xrange(6)]
 #cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
 
-max_expd = 6
+max_expd = 3
 
 #rs = {'central':125, 'min':110, 'max':200, 'fitmin' : 115, 'fitmax' : 135}
 rb = {'central':130, 'min':105, 'max':200, 'fitmin' : 105, 'fitmax' : 200}
@@ -57,26 +57,49 @@ def get_RooHist(ws, h, name=None, blind=False):
 
 
 ## ____________________________________________________________________________
-def build_sumExp(ws, degree):
+def build_sumExp(ws, degree, cat):
     print 'building degree {0} exponential model'.format(degree)
-
 
     exps  = R.RooArgList()
     betas = R.RooArgList()
 
+    f1, m1, c1 = 1., 0., 1.
+
+    if cat in ['cat01', 'cat02', 'cat03']:
+        f1 *= 0.7
+    if cat in ['cat01', 'cat02']:
+        f1 *= 0.2
+    if cat in ['cat03']:
+        f1 *= 1.9
+    if cat in ['cat07']:
+        f1 *= 1.4
+        m1 = -0.5
+        c1 *= 4.2
+
+    if cat in ['cat01']:
+        f1 *= 1.1
+        m1 = -0.5
+        c1 *= 3.2
+
     for i in xrange(1, degree+1):
-        ws.factory('alpha{0}_sumExp[{1}, -1., 0.]'.format(
-            i, max(-1., -0.04*(i+1))))
+        if (i==3 and cat in ['cat07']):
+            ws.factory('alpha{0}_sumExp_{cat}[{1}, -1., 0.]'.format(
+                i, m1, cat=cat))
+        else:
+            ws.factory('alpha{0}_sumExp_{cat}[{1}, -1., 0.]'.format(
+                i, m1 + max(-.9, c1*-0.04*(i+1)), cat=cat))
         if i < degree:
-            ws.factory('beta{0}_sumExp[{1}, 0.0001, .9999]'.format(
-                i, 0.9-float(i-1)*1./degree))
-            betas.add(ws.var('beta{0}_sumExp'.format(i)))
+            ws.factory('beta{0}_sumExp_{cat}[{1}, 0., 1.]'.format(
+                #i, min(max(0.1, 0.45-float(i-1)*(1.1/degree)), 1.)))
+                i, f1*0.3, cat=cat))
+            betas.add(ws.var('beta{0}_sumExp_{cat}'.format(i, cat=cat)))
 
 
     for i in xrange(1, degree+1):
-        ws.factory('Exponential::exp{0}_sumExp(x, alpha{0}_sumExp)'.format(i))
-        exps.add(ws.pdf('exp{0}_sumExp'.format(i)))
-    
+        ws.factory(('Exponential::exp{0}_sumExp_{cat}(x, '
+            'alpha{0}_sumExp_{cat})').format(i, cat=cat))
+        exps.add(ws.pdf('exp{0}_sumExp_{cat}'.format(i, cat=cat)))
+
     sumExp = R.RooAddPdf('sumExpOrd'+str(degree), 
                          'sumExpOrd'+str(degree), exps, betas, R.kTRUE)
     getattr(ws, 'import')(sumExp, R.RooFit.RecycleConflictNodes())
@@ -104,16 +127,18 @@ def main():
     for c in cats: print c
 
     wspace_name = 'higgs'
-    signal_model = 'tripleGauss'
+    #signal_model = 'tripleGauss'
     #f_base = ('/afs/cern.ch/work/e/ekennedy/work/fsanalysis/ana76/'
     #          'root6/CMSSW_7_6_5/src/AnalysisToolLight/2Mu/')
-    f_base = ('')
+    #f_base = ('')
+    f_base = ('/afs/cern.ch/work/e/ekennedy/work/limits/h2mu/'
+              'CMSSW_7_4_7/src/H2MuCombination/data/')
     data_f = R.TFile(f_base+
                      #'tmpout_data.root')
                      'ana_2Mu_SingleMuon_Run2016.root')
-    vbf_f  = R.TFile(f_base+
-                     #'tmpout_VBF_full.root')
-                     'ana_2Mu_DYJetsToLL.root')
+    #vbf_f  = R.TFile(f_base+
+    #                 #'tmpout_VBF_full.root')
+    #                 'ana_2Mu_DYJetsToLL.root')
     h_name_base = 'categories/hDiMuInvMass_'
 
     ftest_results = {}
@@ -121,13 +146,14 @@ def main():
 
 
     for cat in cats: 
+        if cat!='cat01': continue
         wspace_fname = 'workspace_{0}_{1}.root'.format(cat, 'ftest')
         wspace = R.RooWorkspace(wspace_name)
         build_mass_var(wspace)
 
         bkg_models = []
         for order in xrange(1,max_expd+1):
-            bkg_models.append(build_sumExp(wspace, order))
+            bkg_models.append(build_sumExp(wspace, order, cat))
 
 
         ftest_results[cat] = {}
@@ -151,12 +177,14 @@ def main():
 
         rh_data.plotOn(frame, R.RooFit.DrawOption('P'))
 
-        for order in xrange(1,max_expd+1):
+
+        #for order in xrange(1,max_expd+1):
+        for order in xrange(max_expd,max_expd+1):
             print 'trying to get exp order', order
             thisbkgfit = bkg_models[order-1].fitTo(rh_data, R.RooFit.Save(),
                 R.RooFit.Range('blinded_low,blinded_high'),
                 R.RooFit.NormRange('blinded_low,blinded_high'),
-                R.RooFit.PrintLevel(-1),
+                #R.RooFit.PrintLevel(-1),
                 R.RooFit.SumW2Error(R.kTRUE))
 
             thisndof = order*2-1
@@ -179,6 +207,10 @@ def main():
                 #R.RooFit.Normalization(norm, R.RooAbsReal.NumEvent))
                 )
 
+            bkg_models[order-1].paramOn(frame, R.RooFit.Layout(0.55, 0.95, 0.64))
+            frame.getAttText().SetTextSize(0.02)
+
+
             b_integral = get_norm_integral(bkg_models[order-1], wspace, thisbkgfit)
             byield = b_integral[0]*norm, b_integral[1]*norm
             if order==4: order_4_yields.append(byield)
@@ -193,13 +225,14 @@ def main():
 
         frame.SetTitle('F-test: M_{{#mu#mu}} sumExponentials ({0})'.format(cat))
         frame.Draw()
-        leg.Draw()
+        #leg.Draw()
         R.gPad.Modified()
         canv.Print('ftest_sumExp_{0}_yields.png'.format(cat))
 
 
-    for i, cat in enumerate(cats):
-        print '{0}: {1:0.0f} \pm {2:0.0f}'.format(cat, order_4_yields[i][0], order_4_yields[i][1])
+    #for i, cat in enumerate(cats):
+    #    print '{0}: {1:0.0f} \pm {2:0.0f}'.format(cat, 
+    #        order_4_yields[i][0], order_4_yields[i][1])
 
 
     data_f.Close()
@@ -210,3 +243,5 @@ try:
     main()
 except KeyboardInterrupt:
     print
+
+
