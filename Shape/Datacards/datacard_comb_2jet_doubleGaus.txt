@@ -1,0 +1,34 @@
+Combination of cat01=datacard_cat01_doubleGaus.txt  cat02=datacard_cat02_doubleGaus.txt  cat03=datacard_cat03_doubleGaus.txt
+imax 3 number of bins
+jmax 5 number of processes minus 1
+kmax 11 number of nuisance parameters
+----------------------------------------------------------------------------------------------------------------------------------
+shapes *         cat01     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:sig_model_cat01_$PROCESS
+shapes BKG       cat01     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:bkg_model_cat01
+shapes data_obs  cat01     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:data_obs_cat01
+shapes *         cat02     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:sig_model_cat02_$PROCESS
+shapes BKG       cat02     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:bkg_model_cat02
+shapes data_obs  cat02     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:data_obs_cat02
+shapes *         cat03     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:sig_model_cat03_$PROCESS
+shapes BKG       cat03     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:bkg_model_cat03
+shapes data_obs  cat03     $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root mumu:data_obs_cat03
+----------------------------------------------------------------------------------------------------------------------------------
+bin          cat01        cat02        cat03      
+observation  -1.0         -1.0         -1.0       
+----------------------------------------------------------------------------------------------------------------------------------
+bin                             cat01        cat01        cat01        cat01        cat01        cat01        cat02        cat02        cat02        cat02        cat02        cat02        cat03        cat03        cat03        cat03        cat03        cat03      
+process                         GluGlu       ZH           VBF          WPlusH       WMinusH      BKG          GluGlu       ZH           VBF          WPlusH       WMinusH      BKG          GluGlu       ZH           VBF          WPlusH       WMinusH      BKG        
+process                         -4           -3           -2           -1           0            1            -4           -3           -2           -1           0            1            -4           -3           -2           -1           0            1          
+rate                            1.4528       0.0151       3.4827       0.0121       0.0085       1.0000       4.2147       0.1365       2.2138       0.1154       0.0705       1.0000       13.4451      1.1058       2.0798       0.9266       0.5233       1.0000     
+----------------------------------------------------------------------------------------------------------------------------------
+br_hmm                  lnN     1.017        1.017        1.017        1.017        1.017        -            1.017        1.017        1.017        1.017        1.017        -            1.017        1.017        1.017        1.017        1.017        -          
+cms_pdf                 lnN     0.988/1.035  0.981/1.020  0.966/1.001  0.987/1.033  0.977/1.018  -            0.988/1.035  0.981/1.020  0.966/1.001  0.987/1.033  0.977/1.018  -            0.988/1.035  0.981/1.020  0.966/1.001  0.987/1.033  0.977/1.018  -          
+cms_pu                  lnN     0.998/0.999  1.014/0.994  0.996/1.004  1.010/0.991  1.005/0.997  -            0.998/0.999  1.014/0.994  0.996/1.004  1.010/0.991  1.005/0.997  -            0.998/0.999  1.014/0.994  0.996/1.004  1.010/0.991  1.005/0.997  -          
+cms_res_j               lnN     1.004/1.001  1.002/1.000  0.992/1.018  0.998/1.003  1.003/0.996  -            1.004/1.001  1.002/1.000  0.992/1.018  0.998/1.003  1.003/0.996  -            1.004/1.001  1.002/1.000  0.992/1.018  0.998/1.003  1.003/0.996  -          
+cms_scale               lnN     1.005/1.031  0.994/1.013  0.987/0.995  0.966/1.031  0.967/1.012  -            1.005/1.031  0.994/1.013  0.987/0.995  0.966/1.031  0.967/1.012  -            1.005/1.031  0.994/1.013  0.987/0.995  0.966/1.031  0.967/1.012  -          
+cms_scale_j             lnN     0.997/1.003  1.014/0.995  1.026/0.996  0.999/1.002  1.002/0.989  -            0.997/1.003  1.014/0.995  1.026/0.996  0.999/1.002  1.002/0.989  -            0.997/1.003  1.014/0.995  1.026/0.996  0.999/1.002  1.002/0.989  -          
+lumi_13TeV              lnN     1.027        1.027        1.027        1.027        1.027        -            1.027        1.027        1.027        1.027        1.027        -            1.027        1.027        1.027        1.027        1.027        -          
+xsec_WH                 lnN     -            -            -            1.02         1.02         -            -            -            -            1.02         1.02         -            -            -            -            1.02         1.02         -          
+xsec_ZH                 lnN     -            0.965/1.041  -            -            -            -            -            0.965/1.041  -            -            -            -            -            0.965/1.041  -            -            -            -          
+xsec_ggH                lnN     1.05         -            -            -            -            -            1.05         -            -            -            -            -            1.05         -            -            -            -            -          
+xsec_qqH                lnN     -            -            1.022        -            -            -            -            -            1.022        -            -            -            -            -            1.022        -            -            -          
