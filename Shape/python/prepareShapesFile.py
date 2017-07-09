@@ -8,6 +8,7 @@ main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_BASE'])
 input_file_head = 'ana_2Mu_'
 input_file_tail = '.root'
+
 degree = 4
 
 ranges = {
@@ -102,15 +103,16 @@ def main():
             s_fits[p] = s_models[p].fitTo(s_dists[p],
                 RooFit.Save(), RooFit.Range('signal_fit'),
                 RooFit.NormRange('signal_fit'),
+                RooFit.PrintLevel(-1),
                 RooFit.SumW2Error(kTRUE))
-
-            # fix parameters of signal fits
-            s_models[p].getParameters(RooArgSet(w.var('x'))
-                ).setAttribAll('Constant', kTRUE)
 
 
             # plot and print results for later viewing pleasure
             save_plot_of(w, cat, lumi, signal_model, p, s_models[p], s_dists[p])
+
+            # fix parameters of signal fits
+            s_models[p].getParameters(RooArgSet(w.var('x'))
+                ).setAttribAll('Constant', kTRUE)
 
 
     # create output file
