@@ -195,8 +195,8 @@ def build_sum_exp(ws, cat, order=4):
 
 
 ## ____________________________________________________________________________
-def build_data_dist(ws, cat, tfile):
-    hname = 'categories/hDiMuInvMass_'+cat
+def build_data_dist(ws, cat, tfile, hn=None):
+    hname = hn if hn else 'categories/hDiMuInvMass_'+cat
     h = TH1F()
     try:
         h = tfile.Get(hname)
@@ -233,8 +233,8 @@ def get_mc_info(tfile):
 
 
 ## ____________________________________________________________________________
-def get_mc_hist(tfile, cat, lumi, proc):
-    hname = 'categories/hDiMuInvMass_'+cat
+def get_mc_hist(tfile, cat, lumi, proc, hn=None):
+    hname = hn if hn else 'categories/hDiMuInvMass_'+cat
     xsec, sumw = get_mc_info(tfile)
     try:
         h = TH1F(tfile.Get(hname))
@@ -257,7 +257,8 @@ def build_mc_dist(h, ws):
 
 
 ## ____________________________________________________________________________
-def save_plot_of(ws, cat, lumi, signal_model, proc, pdf, dist):
+def save_plot_of(ws, cat, lumi, signal_model, proc, pdf, dist, pd=None):
+    pdir = pd if pd else 'myplots/'
     sig_color = kBlack
     if proc=='VBF': sig_color = kGreen
     elif proc=='GluGlu': sig_color = kBlue
@@ -282,6 +283,6 @@ def save_plot_of(ws, cat, lumi, signal_model, proc, pdf, dist):
     thisframe.Draw()
     leg.Draw()
     gPad.Modified()
-    canv.Print('myplots/sig_'+signal_model+'_fit_'+cat+'_'+proc+'.png')
+    canv.Print(pdir+'sig_'+signal_model+'_fit_'+cat+'_'+proc+'.png')
 
 
