@@ -3,24 +3,25 @@
 import os, sys
 from ROOT import *
 from systematics import get_systematics_map
-from acceptances import get_signal_rate_map
+from acceptances import get_signal_rate_map, ugly_print_yields
+
 
 # this CMSSW_BASE is written into the dcard so it doesn't have to be expanded
 #main_data_dir  = '$CMSSW_BASE/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 main_data_dir  = '$CMSSW_BASE/src/H2MuCombination/data'
 shape_data_dir = '$CMSSW_BASE/src/H2MuCombination/Shape/data'
-lhc_hxswg_dir = '$CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/'
+#lhc_hxswg_dir = '$CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg/sm/'
 
 wspace_name = 'mumu'
 
 signal_model = 'double'
 
-lumi = '36460.'
+lumi = '35860.'
 
 #include_sys = True
 include_sys = False
 
-r = get_signal_rate_map(float(lumi))
+r = get_signal_rate_map(float(lumi))[0]
 u = get_systematics_map()
 
 
@@ -28,6 +29,7 @@ u = get_systematics_map()
 # bin information (single category)
 #################################################
 # bins
+#cats = ['cat'+str(i).zfill(2) for i in xrange(15+1)]
 cats = ['cat'+str(i).zfill(2) for i in xrange(1,15+1)]
 cats_01jet_tight = ['cat'+str(i).zfill(2) for i in xrange(4,9+1)]
 cats_01jet_loose = ['cat'+str(i).zfill(2) for i in xrange(10,15+1)]
@@ -56,21 +58,26 @@ for cat in cats:
         fout.write('kmax \t* \tnumber of nuisance parameters '
             '(sources of systematic uncertainties) \n')
         fout.write(delim)
+
         fout.write('bin \t\t{0} \n'.format(cat))
         fout.write('observation \t-1 \n')
         fout.write(delim)
+
         fout.write(('shapes data_obs * {0}'
             '\t{1}:data_obs_$CHANNEL\n').format(shape_file, wspace_name))
+
         fout.write(('shapes BKG      * {0}'
             '\t{1}:bkg_model_$CHANNEL\n').format(shape_file, wspace_name))
+
         fout.write(('shapes *        * {0}'
             '\t{1}:sig_model_$CHANNEL_$PROCESS\n').format(
                 shape_file, wspace_name))
+
         fout.write(delim)
+
         fout.write('bin\t{0}\n'.format(('\t\t'+cat)*6))
         fout.write('process\t\t\tBKG\t\tVBF\t\tGluGlu\t\tWPlusH\t\tWMinusH\t\tZH\n')
         fout.write('process\t\t\t1\t\t0\t\t-1\t\t-2\t\t-3\t\t-4\n')
-        #fout.write('rate\t\t\t1{0}\n'.format(('\t\t'+lumi)*5))
         fout.write('rate\t\t\t1\t')
         fout.write('\t'+str(r['VBF'][cat]))
         fout.write('\t'+str(r['GluGlu'][cat]))
@@ -146,8 +153,6 @@ print 'Created Datacards/datacard_comb_01jet_{sm}Gaus.txt'.format(sm=signal_mode
 print 'Created Datacards/datacard_comb_01jet_tight_{sm}Gaus.txt'.format(sm=signal_model)
 print 'Created Datacards/datacard_comb_01jet_loose_{sm}Gaus.txt'.format(sm=signal_model)
 
-
-
-
+ugly_print_yields(float(lumi))
 
 

@@ -42,32 +42,49 @@ def get_initial_vals_from_TH1(th1, cat, proc):
         f2 *= 1.1
         c1 *= 1.1
 
+    m2 = 0.
+
+    if cat == 'cat06':
+        f2 -= 0.1
+    elif cat == 'cat09':
+        f2 += 0.1
+    elif cat == 'cat14':
+        f2 += 0.1
+    elif cat == 'cat15':
+        f2 += 0.1
+        if proc=='WMinusH':
+            f1 -= 1.
+            m2 = 1.1
+        if proc=='WPlusH':
+            f1 -= .4
+            f2 -= .4
+        
     # these values work for double gaus
     # DUPLICATE BEFORE DOING TRIPLE
     initial_values = {
         # single Gaus
         'mean1' : th1.GetMean(),
         'mean1min' : max(mean_min, th1.GetMean() - 0.2*th1.GetRMS()),
-        'mean1max' : min(mean_max, th1.GetMean() + 0.2*th1.GetRMS()),
+        'mean1max' : min(mean_max, th1.GetMean() + 0.4*th1.GetRMS()),
         'sigma1' : f1*0.45*th1.GetRMS(),
         'sigma1min' : f1*0.2*th1.GetRMS(),
         'sigma1max' : f1*1.2*th1.GetRMS(),
         # double Gaus
         'mean2' : th1.GetMean(), 
         'mean2min' : max(mean_min, th1.GetMean() - 0.4*th1.GetRMS()),
-        'mean2max' : min(mean_max, th1.GetMean() + 0.4*th1.GetRMS()),
+        'mean2max' : min(mean_max, th1.GetMean() + 0.5*th1.GetRMS() + m2),
         'sigma2' : f2*0.6*th1.GetRMS(), 
         'sigma2min' : f1*0.7*th1.GetRMS(),
         'sigma2max' : f2*1.2*th1.GetRMS(),
         'coef1' : c1*0.45, 'coef1min' : 0.00, 'coef1max' : .9,
-        # triple Gaus
-        'mean3' : th1.GetMean(),
-        'mean3min' : max(mean_min, th1.GetMean() - 2.4*th1.GetRMS()),
-        'mean3max' : min(mean_max, th1.GetMean() + 0.8*th1.GetRMS()),
-        'sigma3' : 2.4*th1.GetRMS(),
-        'sigma3min' : 1.2*th1.GetRMS(),
-        'sigma3max' : 4.8*th1.GetRMS(),
-        'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1,
+        ## triple Gaus
+        #'mean3' : th1.GetMean(),
+        #'mean3min' : max(mean_min, th1.GetMean() - 2.4*th1.GetRMS()),
+        #'mean3max' : min(mean_max, th1.GetMean() + 0.8*th1.GetRMS()),
+        #'sigma3' : 2.4*th1.GetRMS(),
+        #'sigma3min' : 1.2*th1.GetRMS(),
+        #'sigma3max' : 4.8*th1.GetRMS(),
+        #'coef2' : 0.6, 'coef2min' : 0.0, 'coef2max' : 1,
     }
 
     #for key, val in initial_values.iteritems():
@@ -190,6 +207,40 @@ def build_sum_exp(ws, cat, order=4):
     
     bkg_model = RooAddPdf('bkg_model_'+cat, 'bkg_model_'+cat,
         lambdas, betas, kTRUE)
+    getattr(ws, 'import')(bkg_model, RooFit.RecycleConflictNodes())
+    return bkg_model
+
+
+
+## ____________________________________________________________________________
+def build_bwz_gamma(ws, cat):
+    coef = 0.4
+    alpha = -0.002
+    if cat=='cat02':
+        alpha += 0.01
+        coef += 0.3
+    
+    # RooRealVars
+    ws.factory('zwidth_bkg_model_{cat}[2.5, 0., 30.]'.format(cat=cat))
+    ws.factory('zmass_bkg_model_{cat}[91.2, 90., 92.4.]'.format(cat=cat))
+    ws.factory('alpha_bkg_model_{cat}[{0}, -1., -0.00001]'.format(alpha,cat=cat))
+    ws.factory('coef_bkg_model_{cat}[{0}, 0.2, 1.]'.format(coef, cat=cat))
+    ws.var('zwidth_bkg_model_{cat}'.format(cat=cat)).setConstant(kTRUE)
+    ws.var('zmass_bkg_model_{cat}'.format(cat=cat)).setConstant(kTRUE)
+
+    # RooAbsPdfs
+
+    ws.factory(('EXPR::photonExp_bkg_model_{cat}("exp(x*alpha_bkg_model_{cat})'
+        '*pow(x,-2)", x, alpha_bkg_model_{cat})').format(cat=cat))
+    ws.factory(('EXPR::bwExp_bkg_model_{cat}("exp(x*alpha_bkg_model_{cat})'
+        '*zwidth_bkg_model_{cat}/(pow(x-zmass_bkg_model_{cat},2)'
+        ' + 0.25*pow(zwidth_bkg_model_{cat},2))", x, zmass_bkg_model_{cat},'
+        ' zwidth_bkg_model_{cat}, alpha_bkg_model_{cat})').format(cat=cat))
+
+    ws.factory(('SUM::bkg_model_{cat}(coef_bkg_model_{cat}*bwExp_bkg_model_{cat},'
+        'photonExp_bkg_model_{cat})').format(cat=cat))
+
+    bkg_model = ws.pdf('bkg_model_'+cat)
     getattr(ws, 'import')(bkg_model, RooFit.RecycleConflictNodes())
     return bkg_model
 

@@ -2,33 +2,32 @@
 import os, sys
 from ROOT import *
 from tools.tools import *
-#from tools.initial_values import *
 
 main_data_dir  = '{0}/src/H2MuCombination/data'.format(os.environ['CMSSW_BASE'])
 shape_data_dir = '{0}/src/H2MuCombination/Shape/data'.format(os.environ['CMSSW_BASE'])
 input_file_head = 'ana_2Mu_'
 input_file_tail = '.root'
 
-degree = 2
+background_model = 'bwzGamma'
+degree = 1
 
 ranges = {
     'blind_low'  : 120.,
     'blind_high' : 130.,
-    'range_low'  : 105.,
-    'range_high' : 200.,
+    'range_low'  : 100.,
+    'range_high' : 150.,
     'sig_fit_low'  : 115.,
     'sig_fit_high' : 135.,
 }
 
 sp = ['VBF', 'GluGlu', 'WMinusH', 'WPlusH', 'ZH']
 
-#signal_model = 'single'
 signal_model = 'double'
-#signal_model = 'triple'
 
-lumi = 36460.
+lumi = 35860.
 
-cats = ['cat'+str(i).zfill(2) for i in xrange(16)]
+cats = ['cat'+str(i).zfill(2) for i in xrange(1,16)]
+#cats = ['cat'+str(i).zfill(2) for i in xrange(1)]
 
 gROOT.SetBatch(kTRUE)
 RooMsgService.instance().setGlobalKillBelow(5)
@@ -67,11 +66,23 @@ def main():
 
 
     for cat in cats:
-        #if cat != 'cat00': continue
+
+
+
+        ##if cat != 'cat15': continue
+
+
+
+
+
         # get data RooDataHist
         data_obs = build_data_dist(w, cat, tf['data'])
         # create background model
-        bkg_model = build_sum_exp(w, cat, degree)
+        bkg_model = None
+        if background_model=='sumExp':
+            bkg_model = build_sum_exp(w, cat, degree)
+        elif background_model=='bwzGamma':
+            bkg_model = build_bwz_gamma(w, cat)
         # create bkg norm
         data_sume = data_obs.sumEntries()
         bkg_model_norm = RooRealVar('bkg_model_'+cat+'_norm',
@@ -89,6 +100,8 @@ def main():
 
             # get initial guesses for fit from histogram
             s_ivs[p] = get_initial_vals_from_TH1(s_hists[p], cat, p)
+
+            print s_ivs[p]
 
             # create signal models
             if signal_model=='triple':
