@@ -1,0 +1,27 @@
+imax 	1 	number of channels (i.e. cats/bins) 
+jmax 	5 	number of processes minus one 
+kmax 	* 	number of nuisance parameters (sources of systematic uncertainties) 
+----------------------------------------------------------------------
+bin 		cat04 
+observation 	-1 
+----------------------------------------------------------------------
+shapes data_obs * $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root	mumu:data_obs_$CHANNEL
+shapes BKG      * $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root	mumu:bkg_model_$CHANNEL
+shapes *        * $CMSSW_BASE/src/H2MuCombination/Shape/data/workspace_allcats_doubleGaus.root	mumu:sig_model_$CHANNEL_$PROCESS
+----------------------------------------------------------------------
+bin			cat04		cat04		cat04		cat04		cat04		cat04
+process			BKG		VBF		GluGlu		WPlusH		WMinusH		ZH
+process			1		0		-1		-2		-3		-4
+rate			1		2.15875292806	32.9268496471	0.426615808064	0.216356497615	0.46687737485
+----------------------------------------------------------------------
+br_Hmm		lnN	-		1.017		1.017		1.017		1.017		1.017	
+cms_pu		lnN	-		-		-		-		-		-	
+jet_cor		lnN	-		-		-		-		-		-	
+lumi_13TeV	lnN	-		1.025		1.025		1.025		1.025		1.025	
+muon_hlt	lnN	-		1.005		1.005		1.005		1.005		1.005	
+muon_sfs	lnN	-		1.011		1.011		1.011		1.011		1.011	
+xsec_WH		lnN	-		-		-		1.02		1.02		-	
+xsec_ZH		lnN	-		-		-		-		-		0.965/1.041
+xsec_ggH	lnN	-		-		1.05		-		-		-	
+xsec_qqH	lnN	-		1.022		-		-		-		-	
+
